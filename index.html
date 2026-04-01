@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Resultados e Estatísticas da Copa Nordeste Interclubes 2026">
+    <meta name="theme-color" content="#667eea">
+    
+    <meta property="og:title" content="🏀 Copa Nordeste 2026 - Resultados ao Vivo">
+    <meta property="og:description" content="Acompanhe placares, classificação e estatísticas em tempo real.">
+    <meta property="og:type" content="website">
+    
+    <title>Copa Nordeste Interclubes 2026 - Dashboard Pro</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5568d3;
+            --secondary: #764ba2;
+            --success: #48bb78;
+            --warning: #ed8936;
+            --danger: #f56565;
+            --info: #4299e1;
+            --gray-50: #f7fafc;
+            --gray-100: #edf2f7;
+            --gray-200: #e2e8f0;
+            --gray-800: #1a202c;
+            --rn-color: #e53e3e; --pe-color: #4299e1; --al-color: #ed8936; --ce-color: #48bb78; --pb-color: #9f7aea;
+        }
+
+        [data-theme="dark"] {
+            --gray-50: #171923; --gray-100: #1a202c; --gray-200: #2d3748; --gray-800: #edf2f7;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, system-ui, sans-serif;
+            background: var(--gray-100);
+            min-height: 100vh;
+            color: var(--gray-800);
+            padding-bottom: 80px;
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; padding: 10px; }
+
+        /* Sticky Header Navigation */
+        .sticky-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(10px);
+            padding: 10px 0;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .header { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+
+        /* Live Indicator */
+        .status-live {
+            background: var(--danger);
+            color: white;
+            animation: pulse-red 2s infinite;
+        }
+        @keyframes pulse-red {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(0.95); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* Tabs & Buttons */
+        .tabs { display: flex; gap: 8px; overflow-x: auto; padding: 5px; scrollbar-width: none; }
+        .tab {
+            padding: 10px 20px; border-radius: 10px; border: none; background: white;
+            cursor: pointer; font-weight: 600; white-space: nowrap; transition: 0.2s;
+        }
+        .tab.active { background: var(--primary); color: white; }
+
+        /* Cards & Tables */
+        .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--gray-200); }
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { text-align: left; padding: 12px; background: var(--gray-50); font-weight: 700; }
+        td { padding: 12px; border-bottom: 1px solid var(--gray-100); }
+
+        /* Filter Bar */
+        .filter-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
+        select, input { padding: 10px; border: 1px solid var(--gray-200); border-radius: 8px; width: 100%; }
+
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 20px; border-radius: 12px; }
+        .stat-value { font-size: 24px; font-weight: 800; }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 30px;
+            margin-top: 40px;
+            border-top: 1px solid var(--gray-200);
+            color: var(--gray-500);
+        }
+        footer a { color: var(--primary); text-decoration: none; font-weight: bold; }
+
+        @media (max-width: 768px) {
+            .game-teams { grid-template-columns: 1fr !important; }
+            .score-input { width: 60px !important; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        const initialData = {
+            teams: {
+                U13: { A: ['DRG (RN)', 'BASQ. PARAÍBA (PB)', 'I. C. PAJUSSARA (AL)', 'AADB (PE)'], B: ['AEROCLUBE (RN)', 'MARECHAIS (AL)', 'SPORT RECIFE (PE)'] },
+                U15: { A: ['AEROCLUBE (RN)', 'SPORT RECIFE (PE)', 'MARECHAIS (AL)'], B: ['DRG 1 (RN)', 'AADB 1 (PE)', 'I.C. PAJUSSARA (AL)'], C: ['DRG 2 (RN)', 'BNB (CE)', 'AADB 2 (PE)'] },
+                U17: { A: ['DRG 1 (RN)', 'FÊNIX GOIANINHA (RN)', 'SPORT RECIFE (PE)', 'BNB (CE)'], B: ['DRG MOSSORÓ (RN)', 'ELITE (RN)', 'FITCAMP (PE)'], C: ['DRG 2 (RN)', 'AEROCLUBE 2 (RN)', 'MARECHAIS (AL)'], D: ['AEROCLUBE 1 (RN)', 'I.C. PAJUSSARA (AL)', 'RA10 (CE)'] }
+            },
+            games: [
+                // Os mesmos jogos fornecidos anteriormente...
+                { id: 1, category: 'U13', group: 'A', day: '02/04', time: '09H00', venue: 'INSTITUTO BRASIL', homeTeam: 'BASQ. PARAÍBA (PB)', awayTeam: 'I. C. PAJUSSARA (AL)', phase: 'groups' },
+                { id: 2, category: 'U17', group: 'D', day: '02/04', time: '10H30', venue: 'INSTITUTO BRASIL', homeTeam: 'AEROCLUBE 1 (RN)', awayTeam: 'I.C. PAJUSSARA (AL)', phase: 'groups' },
+                { id: 3, category: 'U15', group: 'B', day: '02/04', time: '12H00', venue: 'INSTITUTO BRASIL', homeTeam: 'DRG 1 (RN)', awayTeam: 'I.C. PAJUSSARA (AL)', phase: 'groups' },
+                { id: 5, category: 'U13', group: 'B', day: '02/04', time: '15H00', venue: 'INSTITUTO BRASIL', homeTeam: 'AEROCLUBE (RN)', awayTeam: 'SPORT RECIFE (PE)', phase: 'groups', homeScore: 45, awayScore: 38 }
+            ]
+        };
+
+        function App() {
+            const [activeTab, setActiveTab] = useState('U13');
+            const [view, setView] = useState('standings');
+            const [games, setGames] = useState(() => JSON.parse(localStorage.getItem('cni2026_games')) || initialData.games);
+            const [filters, setFilters] = useState({ day: 'all', venue: 'all', status: 'all', team: 'all' });
+            const [isAdmin, setIsAdmin] = useState(false);
+
+            useEffect(() => { localStorage.setItem('cni2026_games', JSON.stringify(games)); }, [games]);
+
+            // Helper: Pegar todas as equipes da categoria ativa para o filtro
+            const categoryTeams = useMemo(() => {
+                const teamsSet = new Set();
+                Object.values(initialData.teams[activeTab]).forEach(group => group.forEach(t => teamsSet.add(t)));
+                return Array.from(teamsSet).sort();
+            }, [activeTab]);
+
+            // Motor de Estatísticas Avançado
+            const stats = useMemo(() => {
+                const allStats = {};
+                games.forEach(g => {
+                    if (g.homeScore === undefined) return;
+                    [ {t: g.homeTeam, s: g.homeScore, o: g.awayScore, c: g.category, gr: g.group}, 
+                      {t: g.awayTeam, s: g.awayScore, o: g.homeScore, c: g.category, gr: g.group} ].forEach(side => {
+                        if (!allStats[side.t]) allStats[side.t] = { name: side.t, vit: 0, pts: 0, scored: 0, conc: 0, category: side.c, group: side.gr };
+                        allStats[side.t].scored += side.s;
+                        allStats[side.t].conc += side.o;
+                        if (side.s > side.o) { allStats[side.t].vit += 1; allStats[side.t].pts += 2; }
+                        else { allStats[side.t].pts += 1; }
+                    });
+                });
+                return Object.values(allStats);
+            }, [games]);
+
+            const topByWins = [...stats].sort((a,b) => b.vit - a.vit).slice(0,1)[0];
+            const topByPoints = [...stats].sort((a,b) => b.scored - a.scored).slice(0,1)[0];
+
+            const filteredGames = games.filter(g => {
+                return g.category === activeTab &&
+                    (filters.day === 'all' || g.day === filters.day) &&
+                    (filters.venue === 'all' || g.venue === filters.venue) &&
+                    (filters.team === 'all' || g.homeTeam === filters.team || g.awayTeam === filters.team) &&
+                    (filters.status === 'all' || (filters.status === 'done' ? g.homeScore !== undefined : g.homeScore === undefined));
+            });
+
+            const renderTable = (group) => {
+                const teamsInGroup = initialData.teams[activeTab][group];
+                const groupStats = teamsInGroup.map(t => stats.find(s => s.name === t) || { name: t, vit: 0, pts: 0, scored: 0, conc: 0 });
+                
+                return (
+                    <div className="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Equipe</th>
+                                    <th>VIT</th>
+                                    <th>PTS</th>
+                                    <th>SCOR</th>
+                                    <th>DIFF</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {groupStats.sort((a,b) => b.pts - a.pts || (b.scored - b.conc) - (a.scored - a.conc)).map(t => (
+                                    <tr key={t.name}>
+                                        <td><strong>{t.name}</strong></td>
+                                        <td>{t.vit}</td>
+                                        <td>{t.pts}</td>
+                                        <td>{t.scored}</td>
+                                        <td>{t.scored - t.conc}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                );
+            };
+
+            return (
+                <div className="container">
+                    <div className="header">
+                        <h1>🏀 Copa Nordeste Interclubes 2026</h1>
+                        <p>Gestão Profissional de Resultados</p>
+                    </div>
+
+                    <div className="sticky-nav">
+                        <div className="tabs">
+                            {['U13', 'U15', 'U17'].map(cat => (
+                                <button key={cat} className={`tab ${activeTab === cat ? 'active' : ''}`} onClick={() => {setActiveTab(cat); setFilters({...filters, team: 'all'})}}>
+                                    Sub-{cat.slice(1)}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="tabs" style={{marginBottom: '20px'}}>
+                        <button className={`tab ${view === 'standings' ? 'active' : ''}`} onClick={() => setView('standings')}>📊 Classificação</button>
+                        <button className={`tab ${view === 'games' ? 'active' : ''}`} onClick={() => setView('games')}>⚽ Jogos</button>
+                        <button className={`tab ${view === 'stats' ? 'active' : ''}`} onClick={() => setView('stats')}>📈 Estatísticas</button>
+                    </div>
+
+                    {view === 'games' && (
+                        <div className="filter-bar">
+                            <select value={filters.day} onChange={e => setFilters({...filters, day: e.target.value})}>
+                                <option value="all">Todos os Dias</option>
+                                <option value="02/04">02/04</option><option value="03/04">03/04</option>
+                            </select>
+                            <select value={filters.team} onChange={e => setFilters({...filters, team: e.target.value})}>
+                                <option value="all">Filtrar por Equipe</option>
+                                {categoryTeams.map(t => <option key={t} value={t}>{t}</option>)}
+                            </select>
+                            <select value={filters.status} onChange={e => setFilters({...filters, status: e.target.value})}>
+                                <option value="all">Status</option>
+                                <option value="done">Finalizados</option>
+                                <option value="open">Pendentes</option>
+                            </select>
+                        </div>
+                    )}
+
+                    {view === 'standings' && Object.keys(initialData.teams[activeTab]).map(group => (
+                        <div className="card" key={group}>
+                            <h3>Chave {group}</h3>
+                            {renderTable(group)}
+                        </div>
+                    ))}
+
+                    {view === 'games' && filteredGames.map(g => (
+                        <div className="card" key={g.id}>
+                            <div style={{display:'flex', justifyContent:'space-between', fontSize:'12px', color:'#666'}}>
+                                <span>{g.time} - {g.venue}</span>
+                                <span className={g.homeScore !== undefined ? '' : 'status-live'} style={{padding:'2px 8px', borderRadius:'5px'}}>
+                                    {g.homeScore !== undefined ? 'Finalizado' : 'AO VIVO / AGENDADO'}
+                                </span>
+                            </div>
+                            <div style={{display:'grid', gridTemplateColumns:'1fr auto 1fr', alignItems:'center', marginTop:'10px', textAlign:'center'}}>
+                                <div><strong>{g.homeTeam}</strong></div>
+                                <div style={{fontSize:'24px', fontWeight:'800', margin:'0 20px'}}>
+                                    {g.homeScore ?? '-'} x {g.awayScore ?? '-'}
+                                </div>
+                                <div><strong>{g.awayTeam}</strong></div>
+                            </div>
+                        </div>
+                    ))}
+
+                    {view === 'stats' && (
+                        <>
+                            <div className="stats-grid">
+                                <div className="stat-card">
+                                    <div className="stat-label">Maior Número de Vitórias</div>
+                                    <div className="stat-value">{topByWins?.name || '-'}</div>
+                                    <small>{topByWins?.vit || 0} Vitórias Totais</small>
+                                </div>
+                                <div className="stat-card" style={{background: 'linear-gradient(135deg, #48bb78, #38a169)'}}>
+                                    <div className="stat-label">Ataque Mais Positivo (Pontos)</div>
+                                    <div className="stat-value">{topByPoints?.name || '-'}</div>
+                                    <small>{topByPoints?.scored || 0} Pontos Marcados</small>
+                                </div>
+                            </div>
+
+                            <div className="card">
+                                <h3>Critérios de Desempate (FIBA/CNI)</h3>
+                                <ul style={{padding:'15px', lineHeight:'1.8'}}>
+                                    <li>1. <strong>Pontos:</strong> 2 para vitória, 1 para derrota.</li>
+                                    <li>2. <strong>Confronto Direto:</strong> Resultados entre as equipes empatadas.</li>
+                                    <li>3. <strong>Saldo de Pontos:</strong> Diferença entre marcados e sofridos.</li>
+                                    <li>4. <strong>Pontos Marcados:</strong> Maior média de ataque.</li>
+                                </ul>
+                            </div>
+
+                            <div className="card">
+                                <h3>Estatísticas Gerais por Equipe</h3>
+                                <div className="table-responsive">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Equipe</th>
+                                                <th>Cat.</th>
+                                                <th>Vit</th>
+                                                <th>Marcados</th>
+                                                <th>Sofridos</th>
+                                                <th>Saldo</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {stats.sort((a,b) => b.vit - a.vit).map(t => (
+                                                <tr key={t.name}>
+                                                    <td>{t.name}</td>
+                                                    <td>{t.category}</td>
+                                                    <td>{t.vit}</td>
+                                                    <td>{t.scored}</td>
+                                                    <td>{t.conc}</td>
+                                                    <td>{t.scored - t.conc}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </>
+                    )}
+
+                    <footer>
+                        Desenvolvido por <a href="mailto:fawller@gmail.com">Fawller Dantas</a> &copy; 2026
+                    </footer>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
