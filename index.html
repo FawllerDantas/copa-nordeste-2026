@@ -223,7 +223,22 @@
             box-shadow: 0 0 0 3px rgba(255, 199, 44, 0.1);
         }
 
-        /* Bento Grids */
+        /* Container de Classificação (Empilhado e Centralizado) */
+        .standings-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 24px;
+            width: 100%;
+        }
+
+        .standings-container .card {
+            width: 100%;
+            max-width: 900px; /* Limita a largura máxima para leitura perfeita e o mantém centralizado */
+        }
+
+        /* Bento Grids Gerais (usados nas outras abas) */
         .bento-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -460,7 +475,7 @@
 
         function App() {
             const [activeTab, setActiveTab] = useState('U13');
-            const [view, setView] = useState('stats');
+            const [view, setView] = useState('standings');
             const [theme, setTheme] = useState(() => localStorage.getItem('cni2026_theme') || 'dark');
             const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem('cni2026_admin') === 'true');
             const [showAdminModal, setShowAdminModal] = useState(false);
@@ -653,8 +668,9 @@
                             ))}
                         </div>
 
+                        {/* View Classificação Empilhada e Centralizada */}
                         {view === 'standings' && (
-                            <div className="bento-grid">
+                            <div className="standings-container">
                                 {Object.keys(initialTournamentData.teams[activeTab] || {}).map(group => (
                                     <div key={group} className="card glass-panel">
                                         <h2>Chave {group}</h2>
