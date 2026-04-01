@@ -260,15 +260,15 @@
         .table-container { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
         th {
-            padding: 16px 12px; text-align: left; color: var(--text-muted);
-            font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+            padding: 16px 8px; text-align: left; color: var(--text-muted);
+            font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
             border-bottom: 1px solid var(--glass-border); font-size: 0.8rem;
         }
-        td { padding: 16px 12px; border-bottom: 1px solid var(--glass-border); color: var(--text-main); }
+        td { padding: 16px 8px; border-bottom: 1px solid var(--glass-border); color: var(--text-main); }
         tbody tr:hover { background: rgba(255,255,255,0.05); }
         .team-name { font-weight: 600; font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; letter-spacing: 1px;}
         .stat-cell { text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
-        .text-yellow { color: var(--golden-yellow); }
+        .text-yellow { color: var(--golden-yellow); font-size: 1.1rem;}
 
         /* Games / Placares */
         .games-list { display: grid; gap: 16px; }
@@ -460,7 +460,7 @@
 
         function App() {
             const [activeTab, setActiveTab] = useState('U13');
-            const [view, setView] = useState('bracket');
+            const [view, setView] = useState('standings');
             const [theme, setTheme] = useState(() => localStorage.getItem('cni2026_theme') || 'dark');
             const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem('cni2026_admin') === 'true');
             const [showAdminModal, setShowAdminModal] = useState(false);
@@ -507,23 +507,45 @@
                 }));
             };
 
+            // Nova Lógica de Classificação contemplando J, V, D, PRO, CON, SDO, PTS
             const calculateStandings = (category, group) => {
                 const teamsInGroup = initialTournamentData.teams[category]?.[group] || [];
                 const groupGames = games.filter(g => g.category === category && g.group === group && g.homeScore !== undefined);
+                
                 const standings = teamsInGroup.map(team => {
-                    let stats = { team, VIT: 0, PTS: 0, SDO: 0, CPO: 0, CCO: 0 };
+                    let stats = { team, JOG: 0, VIT: 0, DER: 0, PTS: 0, CPO: 0, CCO: 0, SDO: 0 };
+                    
                     groupGames.forEach(game => {
                         if (game.homeTeam !== team && game.awayTeam !== team) return;
+                        
+                        stats.JOG++;
                         const isHome = game.homeTeam === team;
                         const s = isHome ? game.homeScore : game.awayScore;
                         const c = isHome ? game.awayScore : game.homeScore;
-                        stats.CPO += s; stats.CCO += c;
-                        if (s > c) { stats.VIT++; stats.PTS += 2; } else { stats.PTS += 1; }
+                        
+                        stats.CPO += s; 
+                        stats.CCO += c;
+                        
+                        if (s > c) { 
+                            stats.VIT++; 
+                            stats.PTS += 2; 
+                        } else { 
+                            stats.DER++;
+                            stats.PTS += 1; 
+                        }
                     });
+                    
                     stats.SDO = stats.CPO - stats.CCO;
                     return stats;
                 });
-                return standings.sort((a, b) => b.PTS - a.PTS || b.SDO - a.SDO);
+                
+                // Critérios de desempate: Pontos > Vitórias > Saldo de Gols > Gols Pró
+                return standings.sort((a, b) => 
+                    b.PTS - a.PTS || 
+                    b.VIT - a.VIT || 
+                    b.SDO - a.SDO || 
+                    b.CPO - a.CPO
+                );
             };
 
             const categoryGames = games.filter(g => g.category === activeTab);
@@ -560,13 +582,12 @@
                 };
             }, [games]);
 
-            // Lógica para determinar o Campeão
             const determineChampion = () => {
                 const finalMatch = bracketGames.find(g => g.group === 'FINAL');
                 if (finalMatch && finalMatch.homeScore !== undefined && finalMatch.awayScore !== undefined) {
                     if (finalMatch.homeScore > finalMatch.awayScore) return finalMatch.homeTeam;
                     if (finalMatch.awayScore > finalMatch.homeScore) return finalMatch.awayTeam;
-                    return 'EMPATE'; // Cobre caso raro de empate
+                    return 'EMPATE'; 
                 }
                 return 'A DEFINIR';
             };
@@ -596,7 +617,7 @@
                                 <div className="logo-cni">🏀</div>
                                 <div className="header-text">
                                     <h1>Copa Nordeste Interclubes '26</h1>
-                                    <p>Dashboard de Alta Performance</p>
+                                    <p>Sistema de Acompanhamento de Resultados</p>
                                 </div>
                             </div>
                             <div className="header-actions">
@@ -630,6 +651,7 @@
                             ))}
                         </div>
 
+                        {/* View Classificação Atualizada - Inclusão de J, V, D, PRO, CON, SDO, PTS */}
                         {view === 'standings' && (
                             <div className="bento-grid">
                                 {Object.keys(initialTournamentData.teams[activeTab] || {}).map(group => (
@@ -638,15 +660,28 @@
                                         <div className="table-container">
                                             <table>
                                                 <thead>
-                                                    <tr><th>Equipe</th><th className="stat-cell">V</th><th className="stat-cell text-yellow">PTS</th><th className="stat-cell">SDO</th></tr>
+                                                    <tr>
+                                                        <th>Equipe</th>
+                                                        <th className="stat-cell">J</th>
+                                                        <th className="stat-cell">V</th>
+                                                        <th className="stat-cell">D</th>
+                                                        <th className="stat-cell">PRO</th>
+                                                        <th className="stat-cell">CON</th>
+                                                        <th className="stat-cell">SDO</th>
+                                                        <th className="stat-cell text-yellow">PTS</th>
+                                                    </tr>
                                                 </thead>
                                                 <tbody>
                                                     {calculateStandings(activeTab, group).map(team => (
                                                         <tr key={team.team}>
                                                             <td className="team-name">{team.team}</td>
+                                                            <td className="stat-cell">{team.JOG}</td>
                                                             <td className="stat-cell">{team.VIT}</td>
-                                                            <td className="stat-cell text-yellow">{team.PTS}</td>
+                                                            <td className="stat-cell">{team.DER}</td>
+                                                            <td className="stat-cell">{team.CPO}</td>
+                                                            <td className="stat-cell">{team.CCO}</td>
                                                             <td className="stat-cell">{team.SDO}</td>
+                                                            <td className="stat-cell text-yellow" style={{fontWeight: 900}}>{team.PTS}</td>
                                                         </tr>
                                                     ))}
                                                 </tbody>
@@ -693,7 +728,6 @@
                                         ))}
                                     </div>
 
-                                    {/* Nova Secção: Caixa do Campeão */}
                                     <div className="bracket-round">
                                         <h3 style={{color: 'var(--success)', textAlign: 'center'}}>Campeão</h3>
                                         <div className="bracket-match champion-box">
@@ -810,7 +844,7 @@
                         )}
 
                         <footer>
-                            Desenvolvido por <a href="mailto:fawller@gmail.com">Fawller Dantas (2026)</a>
+                            Desenvolvido por <a href="mailto:fawller@gmail.com">Fawller Dantas 2026</a>
                         </footer>
                     </div>
                 </>
