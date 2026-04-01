@@ -1,0 +1,1967 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sistema de Acompanhamento de Resultados - Copa Nordeste Interclubes 2026">
+    <meta name="theme-color" content="#667eea">
+    <title>Copa Nordeste Interclubes 2026 - Dashboard Pro</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQ29wYSBOb3JkZXN0ZSAyMDI2Iiwic2hvcnRfbmFtZSI6IkNOSSAyMDI2IiwiZGVzY3JpcHRpb24iOiJTaXN0ZW1hIGRlIEdlcmVuY2lhbWVudG8gZGUgVG9ybmVpbyIsInN0YXJ0X3VybCI6Ii8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjZmZmZmZmIiwidGhlbWVfY29sb3IiOiIjNjY3ZWVhIn0=">
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5568d3;
+            --secondary: #764ba2;
+            --success: #48bb78;
+            --warning: #ed8936;
+            --danger: #f56565;
+            --info: #4299e1;
+            --gray-50: #f7fafc;
+            --gray-100: #edf2f7;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e0;
+            --gray-400: #a0aec0;
+            --gray-500: #718096;
+            --gray-600: #4a5568;
+            --gray-700: #2d3748;
+            --gray-800: #1a202c;
+            --gray-900: #171923;
+            
+            /* Estado colors */
+            --rn-color: #e53e3e;
+            --pe-color: #4299e1;
+            --al-color: #ed8936;
+            --ce-color: #48bb78;
+            --pb-color: #9f7aea;
+        }
+
+        [data-theme="dark"] {
+            --gray-50: #171923;
+            --gray-100: #1a202c;
+            --gray-200: #2d3748;
+            --gray-300: #4a5568;
+            --gray-400: #718096;
+            --gray-500: #a0aec0;
+            --gray-600: #cbd5e0;
+            --gray-700: #e2e8f0;
+            --gray-800: #edf2f7;
+            --gray-900: #f7fafc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            min-height: 100vh;
+            padding: 12px;
+            transition: background 0.3s;
+        }
+
+        [data-theme="dark"] body {
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Header Premium */
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        [data-theme="dark"] .header {
+            background: var(--gray-100);
+            color: var(--gray-900);
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--rn-color), var(--pe-color), var(--al-color), var(--ce-color), var(--pb-color));
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo-cni {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 900;
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .header-text h1 {
+            color: var(--gray-800);
+            font-size: 24px;
+            margin-bottom: 4px;
+            font-weight: 800;
+        }
+
+        .header-text p {
+            color: var(--gray-500);
+            font-size: 14px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            border: none;
+            background: var(--gray-100);
+            color: var(--gray-700);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .icon-btn:hover {
+            background: var(--gray-200);
+            transform: translateY(-2px);
+        }
+
+        .icon-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Admin Mode */
+        .admin-banner {
+            background: linear-gradient(135deg, #f56565 0%, #ed8936 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: slideDown 0.3s;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .admin-banner strong {
+            font-size: 14px;
+        }
+
+        /* Tabs Premium */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            background: rgba(255,255,255,0.1);
+            padding: 8px;
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+        }
+
+        .tab {
+            background: rgba(255,255,255,0.9);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gray-700);
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        [data-theme="dark"] .tab {
+            background: var(--gray-200);
+            color: var(--gray-800);
+        }
+
+        .tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .tab.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        [data-theme="dark"] .tab.active {
+            background: var(--gray-100);
+        }
+
+        .tab-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--danger);
+            color: white;
+            border-radius: 12px;
+            padding: 2px 6px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            animation: fadeIn 0.3s;
+        }
+
+        [data-theme="dark"] .card {
+            background: var(--gray-100);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card h2 {
+            color: var(--gray-800);
+            font-size: 18px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-icon {
+            font-size: 22px;
+        }
+
+        /* Grids */
+        .groups-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-box::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 3s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 4px;
+            position: relative;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.95;
+            font-weight: 500;
+            position: relative;
+        }
+
+        .stat-box.success {
+            background: linear-gradient(135deg, var(--success) 0%, #38a169 100%);
+        }
+
+        .stat-box.warning {
+            background: linear-gradient(135deg, var(--warning) 0%, #dd6b20 100%);
+        }
+
+        .stat-box.danger {
+            background: linear-gradient(135deg, var(--danger) 0%, #e53e3e 100%);
+        }
+
+        .stat-box.info {
+            background: linear-gradient(135deg, var(--info) 0%, #3182ce 100%);
+        }
+
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        thead {
+            background: var(--gray-50);
+        }
+
+        [data-theme="dark"] thead {
+            background: var(--gray-200);
+        }
+
+        th {
+            padding: 14px 10px;
+            text-align: left;
+            font-weight: 700;
+            color: var(--gray-700);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 14px 10px;
+            border-bottom: 1px solid var(--gray-200);
+            color: var(--gray-600);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr {
+            transition: all 0.2s;
+        }
+
+        tbody tr:hover {
+            background: var(--gray-50);
+            transform: scale(1.01);
+        }
+
+        [data-theme="dark"] tbody tr:hover {
+            background: var(--gray-200);
+        }
+
+        .team-name {
+            font-weight: 600;
+            color: var(--gray-800);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .state-badge {
+            width: 6px;
+            height: 20px;
+            border-radius: 3px;
+        }
+
+        .state-rn { background: var(--rn-color); }
+        .state-pe { background: var(--pe-color); }
+        .state-al { background: var(--al-color); }
+        .state-ce { background: var(--ce-color); }
+        .state-pb { background: var(--pb-color); }
+
+        .stat-cell {
+            text-align: center;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .highlight {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white !important;
+            font-weight: 700;
+        }
+
+        .position-indicator {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            background: var(--primary);
+            color: white;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            margin-right: 8px;
+        }
+
+        .position-1 { background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%); }
+        .position-2 { background: linear-gradient(135deg, #cbd5e0 0%, #a0aec0 100%); }
+        .position-3 { background: linear-gradient(135deg, #f6ad55 0%, #dd6b20 100%); }
+
+        /* Games */
+        .games-list {
+            display: grid;
+            gap: 16px;
+        }
+
+        .game-card {
+            background: var(--gray-50);
+            border-radius: 16px;
+            padding: 20px;
+            border-left: 5px solid var(--primary);
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        [data-theme="dark"] .game-card {
+            background: var(--gray-200);
+        }
+
+        .game-card:hover {
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            transform: translateY(-2px);
+        }
+
+        .game-card.completed {
+            border-left-color: var(--success);
+        }
+
+        .game-card.live {
+            border-left-color: var(--danger);
+            animation: livePulse 2s infinite;
+        }
+
+        @keyframes livePulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(245, 101, 101, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(245, 101, 101, 0); }
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .game-info {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .badge-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .badge-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .badge-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .badge-info {
+            background: var(--info);
+            color: white;
+        }
+
+        .game-teams {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .team {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .team.home {
+            justify-content: flex-end;
+        }
+
+        .team-label {
+            font-weight: 700;
+            color: var(--gray-800);
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .score-input {
+            width: 70px;
+            padding: 12px;
+            border: 3px solid var(--gray-200);
+            border-radius: 12px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--gray-800);
+            transition: all 0.3s;
+            background: white;
+        }
+
+        [data-theme="dark"] .score-input {
+            background: var(--gray-100);
+            border-color: var(--gray-300);
+        }
+
+        .score-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .score-input:disabled {
+            background: var(--gray-100);
+            cursor: not-allowed;
+        }
+
+        .vs {
+            color: var(--gray-400);
+            font-weight: 900;
+            font-size: 16px;
+        }
+
+        /* Buttons */
+        .btn {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 700;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: var(--gray-500);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success) 0%, #38a169 100%);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger) 0%, #e53e3e 100%);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning) 0%, #dd6b20 100%);
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-pending {
+            background: #feb2b2;
+            color: #742a2a;
+        }
+
+        .status-completed {
+            background: #9ae6b4;
+            color: #22543d;
+        }
+
+        .status-live {
+            background: #fc8181;
+            color: #742a2a;
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Day Header */
+        .day-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            font-weight: 800;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.2s;
+            padding: 20px;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            padding: 32px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s;
+        }
+
+        [data-theme="dark"] .modal {
+            background: var(--gray-100);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal h2 {
+            color: var(--gray-800);
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            justify-content: flex-end;
+        }
+
+        /* Input */
+        .input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        [data-theme="dark"] .input {
+            background: var(--gray-200);
+            border-color: var(--gray-300);
+            color: var(--gray-900);
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Filter Bar */
+        .filter-bar {
+            background: var(--gray-50);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        [data-theme="dark"] .filter-bar {
+            background: var(--gray-200);
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .filter-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gray-600);
+        }
+
+        select {
+            padding: 8px 12px;
+            border: 2px solid var(--gray-200);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            background: white;
+            cursor: pointer;
+        }
+
+        [data-theme="dark"] select {
+            background: var(--gray-100);
+            border-color: var(--gray-300);
+            color: var(--gray-900);
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 40px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 12px;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--gray-200);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 24px;
+            padding-left: 20px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -28px;
+            top: 0;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary);
+            border: 4px solid white;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+        }
+
+        .timeline-item.completed::before {
+            background: var(--success);
+        }
+
+        .timeline-content {
+            background: var(--gray-50);
+            padding: 16px;
+            border-radius: 12px;
+        }
+
+        [data-theme="dark"] .timeline-content {
+            background: var(--gray-200);
+        }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .logo-cni {
+                width: 50px;
+                height: 50px;
+                font-size: 24px;
+            }
+
+            .header-text h1 {
+                font-size: 20px;
+            }
+
+            .game-teams {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .team, .team.home {
+                justify-content: space-between !important;
+            }
+
+            .vs {
+                display: none;
+            }
+
+            .groups-container {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .stat-value {
+                font-size: 28px;
+            }
+
+            .tabs {
+                justify-content: flex-start;
+                overflow-x: auto;
+                padding-bottom: 4px;
+            }
+
+            .tab {
+                padding: 10px 16px;
+                font-size: 13px;
+                white-space: nowrap;
+            }
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gray-500);
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--gray-200);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--gray-800);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            animation: slideInRight 0.3s;
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            max-width: 400px;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .toast.success {
+            background: var(--success);
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        .toast.warning {
+            background: var(--warning);
+        }
+
+        /* Save Indicator */
+        .save-indicator {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 1500;
+            animation: fadeIn 0.3s;
+        }
+
+        .save-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        /* Playoffs Bracket */
+        .bracket {
+            display: flex;
+            gap: 40px;
+            overflow-x: auto;
+            padding: 20px 0;
+        }
+
+        .bracket-round {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            min-width: 200px;
+        }
+
+        .bracket-game {
+            background: var(--gray-50);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 8px 0;
+            border-left: 4px solid var(--primary);
+        }
+
+        [data-theme="dark"] .bracket-game {
+            background: var(--gray-200);
+        }
+
+        .bracket-team {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-radius: 8px;
+            margin: 4px 0;
+            background: white;
+        }
+
+        [data-theme="dark"] .bracket-team {
+            background: var(--gray-100);
+        }
+
+        .bracket-team.winner {
+            font-weight: 700;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .bracket-score {
+            font-weight: 800;
+            font-size: 18px;
+            color: var(--primary);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--gray-500);
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--gray-700);
+        }
+
+        .empty-description {
+            font-size: 14px;
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .header-actions,
+            .tabs,
+            .btn,
+            .actions,
+            .filter-bar {
+                display: none !important;
+            }
+
+            .card {
+                break-inside: avoid;
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+        }
+
+        /* Accessibility */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0,0,0,0);
+            border: 0;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--gray-100);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--gray-400);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-500);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
+
+        // Dados iniciais completos
+        const initialTournamentData = {
+            teams: {
+                U13: {
+                    A: ['DRG (RN)', 'BASQ. PARAÍBA (PB)', 'I. C. PAJUSSARA (AL)', 'AADB (PE)'],
+                    B: ['AEROCLUBE (RN)', 'MARECHAIS (AL)', 'SPORT RECIFE (PE)']
+                },
+                U15: {
+                    A: ['AEROCLUBE (RN)', 'SPORT RECIFE (PE)', 'MARECHAIS (AL)'],
+                    B: ['DRG 1 (RN)', 'AADB 1 (PE)', 'I.C. PAJUSSARA (AL)'],
+                    C: ['DRG 2 (RN)', 'BNB (CE)', 'AADB 2 (PE)']
+                },
+                U17: {
+                    A: ['DRG 1 (RN)', 'FÊNIX GOIANINHA (RN)', 'SPORT RECIFE (PE)', 'BNB (CE)'],
+                    B: ['DRG MOSSORÓ (RN)', 'ELITE (RN)', 'FITCAMP (PE)'],
+                    C: ['DRG 2 (RN)', 'AEROCLUBE 2 (RN)', 'MARECHAIS (AL)'],
+                    D: ['AEROCLUBE 1 (RN)', 'I.C. PAJUSSARA (AL)', 'RA10 (CE)']
+                }
+            },
+            games: [
+                // Quinta-feira - 02 de abril
+                { id: 1, category: 'U13', group: 'A', day: '02/04', time: '09H00', venue: 'INSTITUTO BRASIL', homeTeam: 'BASQ. PARAÍBA (PB)', awayTeam: 'I. C. PAJUSSARA (AL)', phase: 'groups' },
+                { id: 2, category: 'U17', group: 'D', day: '02/04', time: '10H30', venue: 'INSTITUTO BRASIL', homeTeam: 'AEROCLUBE 1 (RN)', awayTeam: 'I.C. PAJUSSARA (AL)', phase: 'groups' },
+                { id: 3, category: 'U15', group: 'B', day: '02/04', time: '12H00', venue: 'INSTITUTO BRASIL', homeTeam: 'DRG 1 (RN)', awayTeam: 'I.C. PAJUSSARA (AL)', phase: 'groups' },
+                { id: 4, category: 'U15', group: 'C', day: '02/04', time: '13H30', venue: 'INSTITUTO BRASIL', homeTeam: 'DRG 2 (RN)', awayTeam: 'AADB 2 (PE)', phase: 'groups' },
+                { id: 5, category: 'U13', group: 'B', day: '02/04', time: '15H00', venue: 'INSTITUTO BRASIL', homeTeam: 'AEROCLUBE (RN)', awayTeam: 'SPORT RECIFE (PE)', phase: 'groups' },
+                { id: 6, category: 'U17', group: 'A', day: '02/04', time: '16H30', venue: 'INSTITUTO BRASIL', homeTeam: 'FÊNIX GOIANINHA (RN)', awayTeam: 'SPORT RECIFE (PE)', phase: 'groups' },
+                { id: 7, category: 'U17', group: 'A', day: '02/04', time: '18H00', venue: 'INSTITUTO BRASIL', homeTeam: 'DRG 1 (RN)', awayTeam: 'BNB (CE)', phase: 'groups' },
+                { id: 8, category: 'U15', group: 'C', day: '02/04', time: '19H30', venue: 'INSTITUTO BRASIL', homeTeam: 'BNB (CE)', awayTeam: 'AADB 2 (PE)', phase: 'groups' },
+                { id: 9, category: 'U13', group: 'B', day: '02/04', time: '10H00', venue: 'IFRN PARNAMIRIM', homeTeam: 'AEROCLUBE (RN)', awayTeam: 'MARECHAIS (AL)', phase: 'groups' },
+                { id: 10, category: 'U15', group: 'A', day: '02/04', time: '11H30', venue: 'IFRN PARNAMIRIM', homeTeam: 'AEROCLUBE (RN)', awayTeam: 'MARECHAIS (AL)', phase: 'groups' },
+                { id: 11, category: 'U13', group: 'A', day: '02/04', time: '13H00', venue: 'IFRN PARNAMIRIM', homeTeam: 'DRG (RN)', awayTeam: 'BASQ. PARAÍBA (PB)', phase: 'groups' },
+                { id: 12, category: 'U17', group: 'C', day: '02/04', time: '14H30', venue: 'IFRN PARNAMIRIM', homeTeam: 'AEROCLUBE 2 (RN)', awayTeam: 'MARECHAIS (AL)', phase: 'groups' },
+                { id: 13, category: 'U15', group: 'A', day: '02/04', time: '16H00', venue: 'IFRN PARNAMIRIM', homeTeam: 'SPORT RECIFE (PE)', awayTeam: 'MARECHAIS (AL)', phase: 'groups' },
+                { id: 14, category: 'U17', group: 'C', day: '02/04', time: '09H00', venue: 'JORGE TAVARES', homeTeam: 'DRG 2 (RN)', awayTeam: 'AEROCLUBE 2 (RN)', phase: 'groups' },
+                { id: 15, category: 'U17', group: 'B', day: '02/04', time: '10H30', venue: 'JORGE TAVARES', homeTeam: 'ELITE (RN)', awayTeam: 'FITCAMP (PE)', phase: 'groups' },
+                { id: 16, category: 'U13', group: 'A', day: '02/04', time: '12H30', venue: 'JORGE TAVARES', homeTeam: 'I. C. PAJUSSARA (AL)', awayTeam: 'AADB (PE)', phase: 'groups' },
+                { id: 17, category: 'U17', group: 'B', day: '02/04', time: '13H30', venue: 'JORGE TAVARES', homeTeam: 'DRG MOSSORÓ (RN)', awayTeam: 'FITCAMP (PE)', phase: 'groups' },
+                { id: 18, category: 'U17', group: 'D', day: '02/04', time: '15H00', venue: 'JORGE TAVARES', homeTeam: 'I.C. PAJUSSARA (AL)', awayTeam: 'RA10 (CE)', phase: 'groups' },
+                { id: 19, category: 'U15', group: 'B', day: '02/04', time: '16H30', venue: 'JORGE TAVARES', homeTeam: 'AADB 1 (PE)', awayTeam: 'I.C. PAJUSSARA (AL)', phase: 'groups' },
+                { id: 20, category: 'U13', group: 'A', day: '02/04', time: '18H00', venue: 'JORGE TAVARES', homeTeam: 'DRG (RN)', awayTeam: 'AADB (PE)', phase: 'groups' },
+                
+                // Sexta-feira - 03 de abril
+                { id: 21, category: 'U17', group: 'A', day: '03/04', time: '08H00', venue: 'INSTITUTO BRASIL', homeTeam: 'DRG 1 (RN)', awayTeam: 'SPORT RECIFE (PE)', phase: 'groups' },
+                { id: 22, category: 'U17', group: 'A', day: '03/04', time: '09H30', venue: 'INSTITUTO BRASIL', homeTeam: 'FÊNIX GOIANINHA (RN)', awayTeam: 'BNB (CE)', phase: 'groups' },
+                { id: 23, category: 'U15', group: 'B', day: '03/04', time: '11H00', venue: 'INSTITUTO BRASIL', homeTeam: 'DRG 1 (RN)', awayTeam: 'AADB 1 (PE)', phase: 'groups' },
+                { id: 24, category: 'U17', group: 'C', day: '03/04', time: '12H30', venue: 'INSTITUTO BRASIL', homeTeam: 'DRG 2 (RN)', awayTeam: 'MARECHAIS (AL)', phase: 'groups' },
+                { id: 25, category: 'U15', group: 'SF1', day: '03/04', time: '15H30', venue: 'INSTITUTO BRASIL', homeTeam: '1º A', awayTeam: 'MELHOR 2º', phase: 'playoffs' },
+                { id: 26, category: 'U15', group: 'SF2', day: '03/04', time: '17H00', venue: 'INSTITUTO BRASIL', homeTeam: '1º B', awayTeam: '1º C', phase: 'playoffs' },
+                { id: 27, category: 'U17', group: 'DISP8-10', day: '03/04', time: '18H30', venue: 'INSTITUTO BRASIL', homeTeam: '8º RANKING', awayTeam: '10º RANKING', phase: 'playoffs' },
+                { id: 28, category: 'U15', group: 'A', day: '03/04', time: '08H00', venue: 'IFRN PARNAMIRIM', homeTeam: 'AEROCLUBE (RN)', awayTeam: 'SPORT RECIFE (PE)', phase: 'groups' },
+                { id: 29, category: 'U13', group: 'A', day: '03/04', time: '09H30', venue: 'IFRN PARNAMIRIM', homeTeam: 'BASQ. PARAÍBA (PB)', awayTeam: 'AADB (PE)', phase: 'groups' },
+                { id: 30, category: 'U17', group: 'B', day: '03/04', time: '11H00', venue: 'IFRN PARNAMIRIM', homeTeam: 'DRG MOSSORÓ (RN)', awayTeam: 'ELITE (RN)', phase: 'groups' },
+                { id: 31, category: 'U17', group: 'D', day: '03/04', time: '12H30', venue: 'IFRN PARNAMIRIM', homeTeam: 'AEROCLUBE 1 (RN)', awayTeam: 'RA10 (CE)', phase: 'groups' },
+                { id: 32, category: 'U17', group: 'A', day: '03/04', time: '14H00', venue: 'IFRN PARNAMIRIM', homeTeam: 'SPORT RECIFE (PE)', awayTeam: 'BNB (CE)', phase: 'groups' },
+                { id: 33, category: 'U17', group: 'A', day: '03/04', time: '15H30', venue: 'IFRN PARNAMIRIM', homeTeam: 'DRG 1 (RN)', awayTeam: 'FÊNIX GOIANINHA (RN)', phase: 'groups' },
+                { id: 34, category: 'U13', group: 'A', day: '03/04', time: '08H00', venue: 'JORGE TAVARES', homeTeam: 'DRG (RN)', awayTeam: 'I. C. PAJUSSARA (AL)', phase: 'groups' },
+                { id: 35, category: 'U13', group: 'B', day: '03/04', time: '09H30', venue: 'JORGE TAVARES', homeTeam: 'MARECHAIS (AL)', awayTeam: 'SPORT RECIFE (PE)', phase: 'groups' },
+                { id: 36, category: 'U15', group: 'C', day: '03/04', time: '11H00', venue: 'JORGE TAVARES', homeTeam: 'DRG 2 (RN)', awayTeam: 'BNB (CE)', phase: 'groups' },
+                { id: 37, category: 'U15', group: 'DISP8-9', day: '03/04', time: '14H00', venue: 'JORGE TAVARES', homeTeam: '8º RANKING', awayTeam: '9º RANKING', phase: 'playoffs' },
+                { id: 38, category: 'U15', group: 'DISP5-7', day: '03/04', time: '15H30', venue: 'JORGE TAVARES', homeTeam: '5º RANKING', awayTeam: '7º RANKING', phase: 'playoffs' },
+                { id: 39, category: 'U13', group: 'DISP5-7', day: '03/04', time: '17H00', venue: 'JORGE TAVARES', homeTeam: '5º RANKING', awayTeam: '7º RANKING', phase: 'playoffs' },
+                { id: 40, category: 'U17', group: 'DISP11-13', day: '03/04', time: '18H30', venue: 'JORGE TAVARES', homeTeam: '11º RANKING', awayTeam: '13º RANKING', phase: 'playoffs' },
+
+                // Sábado - 04 de abril (Playoffs)
+                { id: 41, category: 'U17', group: 'DISP8-10', day: '04/04', time: '08H00', venue: 'INSTITUTO BRASIL', homeTeam: '9º RANKING', awayTeam: '10º RANKING', phase: 'playoffs' },
+                { id: 42, category: 'U13', group: 'DISP5-7', day: '04/04', time: '09H30', venue: 'INSTITUTO BRASIL', homeTeam: '6º RANKING', awayTeam: '7º RANKING', phase: 'playoffs' },
+                { id: 43, category: 'U13', group: 'SF1', day: '04/04', time: '11H00', venue: 'INSTITUTO BRASIL', homeTeam: '1º A', awayTeam: '2º B', phase: 'playoffs' },
+                { id: 44, category: 'U13', group: 'SF2', day: '04/04', time: '12H30', venue: 'INSTITUTO BRASIL', homeTeam: '1º B', awayTeam: '2º A', phase: 'playoffs' },
+                { id: 45, category: 'U17', group: 'SF1', day: '04/04', time: '14H00', venue: 'INSTITUTO BRASIL', homeTeam: '1º A', awayTeam: '1º D', phase: 'playoffs' },
+                { id: 46, category: 'U17', group: 'SF2', day: '04/04', time: '15H30', venue: 'INSTITUTO BRASIL', homeTeam: '1º B', awayTeam: '1º C', phase: 'playoffs' },
+
+                // Domingo - 05 de abril (Finais)
+                { id: 58, category: 'U13', group: 'TERCEIRO', day: '05/04', time: '08H00', venue: 'INSTITUTO BRASIL', homeTeam: 'PERD. SF1', awayTeam: 'PERD. SF2', phase: 'finals' },
+                { id: 59, category: 'U13', group: 'FINAL', day: '05/04', time: '09H45', venue: 'INSTITUTO BRASIL', homeTeam: 'VENC. SF1', awayTeam: 'VENC. SF2', phase: 'finals' },
+                { id: 60, category: 'U15', group: 'TERCEIRO', day: '05/04', time: '11H30', venue: 'INSTITUTO BRASIL', homeTeam: 'PERD. SF1', awayTeam: 'PERD. SF2', phase: 'finals' },
+                { id: 61, category: 'U15', group: 'FINAL', day: '05/04', time: '13H15', venue: 'INSTITUTO BRASIL', homeTeam: 'VENC. SF1', awayTeam: 'VENC. SF2', phase: 'finals' },
+                { id: 62, category: 'U17', group: 'TERCEIRO', day: '05/04', time: '15H00', venue: 'INSTITUTO BRASIL', homeTeam: 'PERD. SF1', awayTeam: 'PERD. SF2', phase: 'finals' },
+                { id: 63, category: 'U17', group: 'FINAL', day: '05/04', time: '16H45', venue: 'INSTITUTO BRASIL', homeTeam: 'VENC. SF1', awayTeam: 'VENC. SF2', phase: 'finals' }
+            ]
+        };
+
+        // Utility functions
+        const getStateFromTeam = (team) => {
+            if (team.includes('(RN)')) return 'rn';
+            if (team.includes('(PE)')) return 'pe';
+            if (team.includes('(AL)')) return 'al';
+            if (team.includes('(CE)')) return 'ce';
+            if (team.includes('(PB)')) return 'pb';
+            return 'rn';
+        };
+
+        const formatTime = (time) => {
+            return time.replace('H', 'h');
+        };
+
+        const showToast = (message, type = 'info') => {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<span>${type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ'}</span> ${message}`;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'slideInRight 0.3s reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        };
+
+        // Main App Component
+        function App() {
+            const [activeTab, setActiveTab] = useState('U13');
+            const [view, setView] = useState('standings');
+            const [theme, setTheme] = useState(() => localStorage.getItem('cni2026_theme') || 'light');
+            const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem('cni2026_admin') === 'true');
+            const [showAdminModal, setShowAdminModal] = useState(false);
+            const [adminPassword, setAdminPassword] = useState('');
+            const [games, setGames] = useState(() => {
+                const saved = localStorage.getItem('cni2026_games');
+                return saved ? JSON.parse(saved) : initialTournamentData.games;
+            });
+            const [filterDay, setFilterDay] = useState('all');
+            const [filterVenue, setFilterVenue] = useState('all');
+            const [filterStatus, setFilterStatus] = useState('all');
+            const [lastSaved, setLastSaved] = useState(Date.now());
+
+            useEffect(() => {
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('cni2026_theme', theme);
+            }, [theme]);
+
+            useEffect(() => {
+                localStorage.setItem('cni2026_games', JSON.stringify(games));
+                setLastSaved(Date.now());
+            }, [games]);
+
+            useEffect(() => {
+                localStorage.setItem('cni2026_admin', isAdmin);
+            }, [isAdmin]);
+
+            const toggleTheme = () => {
+                setTheme(prev => prev === 'light' ? 'dark' : 'light');
+            };
+
+            const handleAdminLogin = () => {
+                if (adminPassword === 'CNI2026') {
+                    setIsAdmin(true);
+                    setShowAdminModal(false);
+                    setAdminPassword('');
+                    showToast('Modo administrador ativado', 'success');
+                } else {
+                    showToast('Senha incorreta', 'error');
+                }
+            };
+
+            const handleAdminLogout = () => {
+                setIsAdmin(false);
+                showToast('Modo administrador desativado', 'info');
+            };
+
+            const updateScore = (gameId, team, score) => {
+                if (!isAdmin) {
+                    showToast('Apenas administradores podem editar placares', 'warning');
+                    return;
+                }
+
+                setGames(prev => prev.map(game => {
+                    if (game.id === gameId) {
+                        const newGame = {
+                            ...game,
+                            [team === 'home' ? 'homeScore' : 'awayScore']: parseInt(score) || 0
+                        };
+                        
+                        // Auto-save notification
+                        setTimeout(() => {
+                            showToast('Placar salvo automaticamente', 'success');
+                        }, 500);
+                        
+                        return newGame;
+                    }
+                    return game;
+                }));
+            };
+
+            const calculateStandings = (category, group) => {
+                const teams = initialTournamentData.teams[category][group];
+                const groupGames = games.filter(g => 
+                    g.category === category && 
+                    g.group === group &&
+                    g.phase === 'groups' &&
+                    g.homeScore !== undefined &&
+                    g.awayScore !== undefined
+                );
+
+                const standings = teams.map(team => {
+                    const teamGames = groupGames.filter(g => 
+                        g.homeTeam === team || g.awayTeam === team
+                    );
+
+                    let stats = {
+                        team,
+                        JOG: teamGames.length,
+                        VIT: 0,
+                        DER: 0,
+                        PTS: 0,
+                        CPO: 0,
+                        CCO: 0,
+                        SDO: 0
+                    };
+
+                    teamGames.forEach(game => {
+                        const isHome = game.homeTeam === team;
+                        const scored = isHome ? game.homeScore : game.awayScore;
+                        const conceded = isHome ? game.awayScore : game.homeScore;
+
+                        stats.CPO += scored;
+                        stats.CCO += conceded;
+
+                        if (scored > conceded) {
+                            stats.VIT++;
+                            stats.PTS += 2;
+                        } else {
+                            stats.DER++;
+                            stats.PTS += 1;
+                        }
+                    });
+
+                    stats.SDO = stats.CPO - stats.CCO;
+                    return stats;
+                });
+
+                return standings.sort((a, b) => {
+                    if (a.VIT !== b.VIT) return b.VIT - a.VIT;
+                    if (a.DER !== b.DER) return a.DER - b.DER;
+                    if (a.PTS !== b.PTS) return b.PTS - a.PTS;
+                    if (a.SDO !== b.SDO) return b.SDO - a.SDO;
+                    if (a.CPO !== b.CPO) return b.CPO - a.CPO;
+                    return a.CCO - b.CCO;
+                });
+            };
+
+            const resetData = () => {
+                if (!isAdmin) {
+                    showToast('Apenas administradores podem resetar dados', 'warning');
+                    return;
+                }
+                
+                if (confirm('⚠️ ATENÇÃO: Tem certeza que deseja resetar TODOS os dados?\n\nEsta ação é IRREVERSÍVEL e apagará todos os placares lançados.\n\nClique OK para confirmar o reset completo.')) {
+                    setGames(initialTournamentData.games);
+                    localStorage.removeItem('cni2026_games');
+                    showToast('Todos os dados foram resetados', 'success');
+                }
+            };
+
+            const exportData = () => {
+                const data = {
+                    games,
+                    exportDate: new Date().toISOString(),
+                    version: '2.0',
+                    tournament: 'Copa Nordeste Interclubes 2026'
+                };
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `CNI2026_backup_${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                showToast('Backup exportado com sucesso', 'success');
+            };
+
+            const importData = (event) => {
+                if (!isAdmin) {
+                    showToast('Apenas administradores podem importar dados', 'warning');
+                    return;
+                }
+
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const data = JSON.parse(e.target.result);
+                            if (data.games && Array.isArray(data.games)) {
+                                setGames(data.games);
+                                showToast('Dados importados com sucesso', 'success');
+                            } else {
+                                showToast('Arquivo inválido', 'error');
+                            }
+                        } catch (error) {
+                            showToast('Erro ao importar. Verifique o arquivo.', 'error');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+
+            const exportPDF = () => {
+                window.print();
+            };
+
+            // Filtered games
+            const categoryGames = useMemo(() => {
+                let filtered = games.filter(g => g.category === activeTab);
+                
+                if (filterDay !== 'all') {
+                    filtered = filtered.filter(g => g.day === filterDay);
+                }
+                if (filterVenue !== 'all') {
+                    filtered = filtered.filter(g => g.venue === filterVenue);
+                }
+                if (filterStatus === 'completed') {
+                    filtered = filtered.filter(g => g.homeScore !== undefined && g.awayScore !== undefined);
+                } else if (filterStatus === 'pending') {
+                    filtered = filtered.filter(g => g.homeScore === undefined || g.awayScore === undefined);
+                }
+                
+                return filtered;
+            }, [games, activeTab, filterDay, filterVenue, filterStatus]);
+
+            const completedGames = categoryGames.filter(g => g.homeScore !== undefined && g.awayScore !== undefined).length;
+            const totalGames = categoryGames.length;
+            const pendingGames = totalGames - completedGames;
+
+            const groups = Object.keys(initialTournamentData.teams[activeTab] || {});
+            const days = ['02/04', '03/04', '04/04', '05/04'];
+            const venues = ['INSTITUTO BRASIL', 'IFRN PARNAMIRIM', 'JORGE TAVARES'];
+
+            // Calculate top scorer
+            const topScorers = useMemo(() => {
+                const scorers = {};
+                games.filter(g => g.category === activeTab && g.homeScore !== undefined).forEach(game => {
+                    if (!scorers[game.homeTeam]) scorers[game.homeTeam] = 0;
+                    if (!scorers[game.awayTeam]) scorers[game.awayTeam] = 0;
+                    scorers[game.homeTeam] += game.homeScore;
+                    scorers[game.awayTeam] += game.awayScore;
+                });
+                return Object.entries(scorers).sort((a, b) => b[1] - a[1]).slice(0, 5);
+            }, [games, activeTab]);
+
+            return (
+                <div className="container">
+                    <div className="header">
+                        <div className="header-content">
+                            <div className="logo-section">
+                                <div className="logo-cni">🏀</div>
+                                <div className="header-text">
+                                    <h1>Copa Nordeste Interclubes 2026</h1>
+                                    <p>Sistema de Gerenciamento Profissional v2.0</p>
+                                </div>
+                            </div>
+                            <div className="header-actions">
+                                <button className="icon-btn" onClick={toggleTheme} title="Alternar tema">
+                                    {theme === 'light' ? '🌙' : '☀️'}
+                                </button>
+                                <button 
+                                    className={`icon-btn ${isAdmin ? 'active' : ''}`}
+                                    onClick={() => isAdmin ? handleAdminLogout() : setShowAdminModal(true)}
+                                    title={isAdmin ? 'Sair do modo admin' : 'Modo administrador'}
+                                >
+                                    🔐
+                                </button>
+                                <button className="icon-btn" onClick={exportData} title="Exportar backup">
+                                    💾
+                                </button>
+                                <button className="icon-btn" onClick={exportPDF} title="Imprimir">
+                                    🖨️
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {isAdmin && (
+                        <div className="admin-banner">
+                            <strong>🔐 Modo Administrador Ativo</strong>
+                            <button className="btn btn-sm" onClick={handleAdminLogout}>
+                                Sair
+                            </button>
+                        </div>
+                    )}
+
+                    <div className="tabs">
+                        {['U13', 'U15', 'U17'].map(cat => (
+                            <button 
+                                key={cat}
+                                className={`tab ${activeTab === cat ? 'active' : ''}`}
+                                onClick={() => setActiveTab(cat)}
+                            >
+                                {cat === 'U13' ? 'Sub-13' : cat === 'U15' ? 'Sub-15' : 'Sub-17'}
+                                {pendingGames > 0 && activeTab !== cat && (
+                                    <span className="tab-badge">{pendingGames}</span>
+                                )}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="tabs">
+                        {[
+                            { id: 'standings', icon: '📊', label: 'Classificação' },
+                            { id: 'games', icon: '⚽', label: 'Jogos' },
+                            { id: 'playoffs', icon: '🏆', label: 'Playoffs' },
+                            { id: 'stats', icon: '📈', label: 'Estatísticas' }
+                        ].map(v => (
+                            <button 
+                                key={v.id}
+                                className={`tab ${view === v.id ? 'active' : ''}`}
+                                onClick={() => setView(v.id)}
+                            >
+                                <span>{v.icon}</span> {v.label}
+                            </button>
+                        ))}
+                    </div>
+
+                    {view === 'standings' && (
+                        <>
+                            <div className="stats-grid">
+                                <div className="stat-box">
+                                    <div className="stat-value">{totalGames}</div>
+                                    <div className="stat-label">Total de Jogos</div>
+                                </div>
+                                <div className="stat-box success">
+                                    <div className="stat-value">{completedGames}</div>
+                                    <div className="stat-label">Finalizados</div>
+                                </div>
+                                <div className="stat-box warning">
+                                    <div className="stat-value">{pendingGames}</div>
+                                    <div className="stat-label">Pendentes</div>
+                                </div>
+                                <div className="stat-box info">
+                                    <div className="stat-value">{Math.round((completedGames / totalGames) * 100)}%</div>
+                                    <div className="stat-label">Progresso</div>
+                                </div>
+                            </div>
+
+                            <div className="groups-container">
+                                {groups.map(group => (
+                                    <div key={group} className="card">
+                                        <h2>
+                                            <span className="card-icon">🏅</span>
+                                            Chave {group}
+                                        </h2>
+                                        <div className="table-container">
+                                            <table>
+                                                <thead>
+                                                    <tr>
+                                                        <th>#</th>
+                                                        <th>Equipe</th>
+                                                        <th className="stat-cell">J</th>
+                                                        <th className="stat-cell">V</th>
+                                                        <th className="stat-cell">D</th>
+                                                        <th className="stat-cell highlight">PTS</th>
+                                                        <th className="stat-cell">CPO</th>
+                                                        <th className="stat-cell">CCO</th>
+                                                        <th className="stat-cell">SDO</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {calculateStandings(activeTab, group).map((team, idx) => (
+                                                        <tr key={team.team}>
+                                                            <td>
+                                                                <span className={`position-indicator position-${idx + 1}`}>
+                                                                    {idx + 1}
+                                                                </span>
+                                                            </td>
+                                                            <td className="team-name">
+                                                                <span className={`state-badge state-${getStateFromTeam(team.team)}`}></span>
+                                                                {team.team}
+                                                            </td>
+                                                            <td className="stat-cell">{team.JOG}</td>
+                                                            <td className="stat-cell">{team.VIT}</td>
+                                                            <td className="stat-cell">{team.DER}</td>
+                                                            <td className="stat-cell highlight">{team.PTS}</td>
+                                                            <td className="stat-cell">{team.CPO}</td>
+                                                            <td className="stat-cell">{team.CCO}</td>
+                                                            <td className="stat-cell">{team.SDO > 0 ? '+' : ''}{team.SDO}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </>
+                    )}
+
+                    {view === 'games' && (
+                        <>
+                            <div className="filter-bar">
+                                <div className="filter-group">
+                                    <span className="filter-label">Dia:</span>
+                                    <select value={filterDay} onChange={(e) => setFilterDay(e.target.value)}>
+                                        <option value="all">Todos</option>
+                                        {days.map(day => (
+                                            <option key={day} value={day}>{day}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="filter-group">
+                                    <span className="filter-label">Local:</span>
+                                    <select value={filterVenue} onChange={(e) => setFilterVenue(e.target.value)}>
+                                        <option value="all">Todos</option>
+                                        {venues.map(venue => (
+                                            <option key={venue} value={venue}>{venue}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="filter-group">
+                                    <span className="filter-label">Status:</span>
+                                    <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+                                        <option value="all">Todos</option>
+                                        <option value="completed">Finalizados</option>
+                                        <option value="pending">Pendentes</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {days.map(day => {
+                                const dayGames = categoryGames.filter(g => g.day === day);
+                                if (dayGames.length === 0) return null;
+
+                                const dayName = {
+                                    '02/04': '📅 Quinta-feira - 02 de Abril',
+                                    '03/04': '📅 Sexta-feira - 03 de Abril',
+                                    '04/04': '📅 Sábado - 04 de Abril',
+                                    '05/04': '📅 Domingo - 05 de Abril'
+                                }[day];
+
+                                return (
+                                    <div key={day}>
+                                        <div className="day-header">{dayName}</div>
+                                        <div className="games-list">
+                                            {dayGames.map(game => {
+                                                const isCompleted = game.homeScore !== undefined && game.awayScore !== undefined;
+                                                
+                                                return (
+                                                    <div key={game.id} className={`game-card ${isCompleted ? 'completed' : ''}`}>
+                                                        <div className="game-header">
+                                                            <div className="game-info">
+                                                                <span className="badge badge-primary">#{game.id}</span>
+                                                                {game.phase === 'groups' && (
+                                                                    <span className="badge badge-info">Chave {game.group}</span>
+                                                                )}
+                                                                {game.phase === 'playoffs' && (
+                                                                    <span className="badge badge-warning">Playoffs</span>
+                                                                )}
+                                                                {game.phase === 'finals' && (
+                                                                    <span className="badge badge-danger">Final</span>
+                                                                )}
+                                                                <span className="badge badge-success">{formatTime(game.time)}</span>
+                                                                <span className="badge" style={{background: 'var(--gray-600)'}}>{game.venue}</span>
+                                                            </div>
+                                                            <span className={`status-badge ${isCompleted ? 'status-completed' : 'status-pending'}`}>
+                                                                {isCompleted ? '✓ Finalizado' : '⏳ Pendente'}
+                                                            </span>
+                                                        </div>
+                                                        <div className="game-teams">
+                                                            <div className="team home">
+                                                                <div className="team-label">
+                                                                    <span className={`state-badge state-${getStateFromTeam(game.homeTeam)}`}></span>
+                                                                    {game.homeTeam}
+                                                                </div>
+                                                                <input 
+                                                                    type="number"
+                                                                    className="score-input"
+                                                                    value={game.homeScore ?? ''}
+                                                                    onChange={(e) => updateScore(game.id, 'home', e.target.value)}
+                                                                    placeholder="-"
+                                                                    min="0"
+                                                                    disabled={!isAdmin}
+                                                                />
+                                                            </div>
+                                                            <span className="vs">VS</span>
+                                                            <div className="team">
+                                                                <input 
+                                                                    type="number"
+                                                                    className="score-input"
+                                                                    value={game.awayScore ?? ''}
+                                                                    onChange={(e) => updateScore(game.id, 'away', e.target.value)}
+                                                                    placeholder="-"
+                                                                    min="0"
+                                                                    disabled={!isAdmin}
+                                                                />
+                                                                <div className="team-label">
+                                                                    {game.awayTeam}
+                                                                    <span className={`state-badge state-${getStateFromTeam(game.awayTeam)}`}></span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </>
+                    )}
+
+                    {view === 'playoffs' && (
+                        <div className="card">
+                            <h2>
+                                <span className="card-icon">🏆</span>
+                                Fase Eliminatória - {activeTab}
+                            </h2>
+                            
+                            <div className="empty-state">
+                                <div className="empty-icon">🏆</div>
+                                <div className="empty-title">Chaveamento em Desenvolvimento</div>
+                                <div className="empty-description">
+                                    A visualização da fase eliminatória será exibida automaticamente<br/>
+                                    assim que os jogos das chaves forem finalizados.
+                                </div>
+                            </div>
+
+                            <h3 style={{marginTop: '40px', marginBottom: '20px', color: 'var(--gray-700)'}}>
+                                Jogos da Fase Eliminatória
+                            </h3>
+                            
+                            <div className="games-list">
+                                {games.filter(g => 
+                                    g.category === activeTab && 
+                                    (g.phase === 'playoffs' || g.phase === 'finals')
+                                ).map(game => {
+                                    const isCompleted = game.homeScore !== undefined && game.awayScore !== undefined;
+                                    
+                                    return (
+                                        <div key={game.id} className={`game-card ${isCompleted ? 'completed' : ''}`}>
+                                            <div className="game-header">
+                                                <div className="game-info">
+                                                    <span className="badge badge-primary">#{game.id}</span>
+                                                    {game.phase === 'playoffs' && (
+                                                        <span className="badge badge-warning">
+                                                            {game.group.includes('SF') ? 'Semifinal' : 
+                                                             game.group.includes('DISP') ? 'Disputa' : game.group}
+                                                        </span>
+                                                    )}
+                                                    {game.phase === 'finals' && (
+                                                        <span className="badge badge-danger">
+                                                            {game.group === 'FINAL' ? '🏆 FINAL' : '🥉 3º Lugar'}
+                                                        </span>
+                                                    )}
+                                                    <span className="badge badge-success">{formatTime(game.time)}</span>
+                                                    <span className="badge" style={{background: 'var(--gray-600)'}}>{game.venue}</span>
+                                                </div>
+                                                <span className={`status-badge ${isCompleted ? 'status-completed' : 'status-pending'}`}>
+                                                    {isCompleted ? '✓ Finalizado' : '⏳ Pendente'}
+                                                </span>
+                                            </div>
+                                            <div className="game-teams">
+                                                <div className="team home">
+                                                    <div className="team-label">{game.homeTeam}</div>
+                                                    <input 
+                                                        type="number"
+                                                        className="score-input"
+                                                        value={game.homeScore ?? ''}
+                                                        onChange={(e) => updateScore(game.id, 'home', e.target.value)}
+                                                        placeholder="-"
+                                                        min="0"
+                                                        disabled={!isAdmin}
+                                                    />
+                                                </div>
+                                                <span className="vs">VS</span>
+                                                <div className="team">
+                                                    <input 
+                                                        type="number"
+                                                        className="score-input"
+                                                        value={game.awayScore ?? ''}
+                                                        onChange={(e) => updateScore(game.id, 'away', e.target.value)}
+                                                        placeholder="-"
+                                                        min="0"
+                                                        disabled={!isAdmin}
+                                                    />
+                                                    <div className="team-label">{game.awayTeam}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {view === 'stats' && (
+                        <>
+                            <div className="stats-grid">
+                                <div className="stat-box">
+                                    <div className="stat-value">{totalGames}</div>
+                                    <div className="stat-label">Total de Jogos</div>
+                                </div>
+                                <div className="stat-box success">
+                                    <div className="stat-value">{completedGames}</div>
+                                    <div className="stat-label">Finalizados</div>
+                                </div>
+                                <div className="stat-box warning">
+                                    <div className="stat-value">{pendingGames}</div>
+                                    <div className="stat-label">Pendentes</div>
+                                </div>
+                                <div className="stat-box info">
+                                    <div className="stat-value">{Math.round((completedGames / totalGames) * 100)}%</div>
+                                    <div className="stat-label">Progresso</div>
+                                </div>
+                            </div>
+
+                            <div className="card">
+                                <h2>
+                                    <span className="card-icon">👑</span>
+                                    Top 5 - Maiores Pontuadores
+                                </h2>
+                                <div className="table-container">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Equipe</th>
+                                                <th className="stat-cell">Total de Pontos</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {topScorers.map(([team, points], idx) => (
+                                                <tr key={team}>
+                                                    <td>
+                                                        <span className={`position-indicator position-${idx + 1}`}>
+                                                            {idx + 1}
+                                                        </span>
+                                                    </td>
+                                                    <td className="team-name">
+                                                        <span className={`state-badge state-${getStateFromTeam(team)}`}></span>
+                                                        {team}
+                                                    </td>
+                                                    <td className="stat-cell highlight">{points}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div className="card">
+                                <h2>
+                                    <span className="card-icon">⚙️</span>
+                                    Gerenciamento de Dados
+                                </h2>
+                                <div className="actions">
+                                    <button className="btn" onClick={exportData}>
+                                        💾 Exportar Backup
+                                    </button>
+                                    <label className="btn btn-secondary" style={{cursor: 'pointer'}}>
+                                        📥 Importar Backup
+                                        <input 
+                                            type="file" 
+                                            accept=".json"
+                                            onChange={importData}
+                                            style={{display: 'none'}}
+                                        />
+                                    </label>
+                                    <button className="btn" onClick={exportPDF}>
+                                        🖨️ Imprimir / PDF
+                                    </button>
+                                    <button className="btn btn-danger" onClick={resetData}>
+                                        🔄 Resetar Tudo
+                                    </button>
+                                </div>
+                                <p style={{marginTop: '16px', color: 'var(--gray-500)', fontSize: '13px'}}>
+                                    💡 Dica: Faça backups regulares para não perder seus dados. Os dados são salvos automaticamente no navegador.
+                                </p>
+                            </div>
+                        </>
+                    )}
+
+                    {showAdminModal && (
+                        <div className="modal-overlay" onClick={() => setShowAdminModal(false)}>
+                            <div className="modal" onClick={(e) => e.stopPropagation()}>
+                                <h2>🔐 Acesso Administrador</h2>
+                                <p style={{color: 'var(--gray-600)', marginBottom: '20px'}}>
+                                    Digite a senha para ativar o modo administrador e poder editar placares.
+                                </p>
+                                <input 
+                                    type="password"
+                                    className="input"
+                                    placeholder="Digite a senha"
+                                    value={adminPassword}
+                                    onChange={(e) => setAdminPassword(e.target.value)}
+                                    onKeyPress={(e) => e.key === 'Enter' && handleAdminLogin()}
+                                    autoFocus
+                                />
+                                <div className="modal-actions">
+                                    <button className="btn btn-secondary" onClick={() => setShowAdminModal(false)}>
+                                        Cancelar
+                                    </button>
+                                    <button className="btn" onClick={handleAdminLogin}>
+                                        Entrar
+                                    </button>
+                                </div>
+                                <p style={{marginTop: '16px', color: 'var(--gray-400)', fontSize: '12px', textAlign: 'center'}}>
+                                    Senha padrão: CNI2026
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="save-indicator">
+                        <div className="save-dot"></div>
+                        <span>Salvo automaticamente</span>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
