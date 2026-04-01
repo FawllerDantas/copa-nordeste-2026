@@ -1,6 +1,4 @@
 {
-  "version": "1.0",
-  "generatedAt": "2026-04-01T17:43:42.752Z",
   "users": [
     {
       "username": "afonso",
@@ -24,7 +22,7 @@
     },
     {
       "username": "fawller",
-      "password": "DerpostivoRG",
+      "password": "Biel1308",
       "name": "Fawller",
       "email": "fawller@gmail.com",
       "role": "admin",
@@ -42,5 +40,7 @@
       "createdAt": "2026-04-01T17:39:40.481Z",
       "createdBy": "master"
     }
-  ]
+  ],
+  "exportDate": "2026-04-01T17:55:22.007Z",
+  "version": "1.0"
 }
