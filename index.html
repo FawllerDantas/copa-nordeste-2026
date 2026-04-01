@@ -460,7 +460,7 @@
 
         function App() {
             const [activeTab, setActiveTab] = useState('U13');
-            const [view, setView] = useState('standings');
+            const [view, setView] = useState('stats');
             const [theme, setTheme] = useState(() => localStorage.getItem('cni2026_theme') || 'dark');
             const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem('cni2026_admin') === 'true');
             const [showAdminModal, setShowAdminModal] = useState(false);
@@ -507,7 +507,6 @@
                 }));
             };
 
-            // Nova Lógica de Classificação contemplando J, V, D, PRO, CON, SDO, PTS
             const calculateStandings = (category, group) => {
                 const teamsInGroup = initialTournamentData.teams[category]?.[group] || [];
                 const groupGames = games.filter(g => g.category === category && g.group === group && g.homeScore !== undefined);
@@ -539,7 +538,6 @@
                     return stats;
                 });
                 
-                // Critérios de desempate: Pontos > Vitórias > Saldo de Gols > Gols Pró
                 return standings.sort((a, b) => 
                     b.PTS - a.PTS || 
                     b.VIT - a.VIT || 
@@ -565,7 +563,9 @@
 
             const allStats = useMemo(() => {
                 const stats = {};
+                let totalPoints = 0;
                 games.filter(g => g.homeScore !== undefined).forEach(g => {
+                    totalPoints += g.homeScore + g.awayScore;
                     [ {t: g.homeTeam, s: g.homeScore, c: g.awayScore}, {t: g.awayTeam, s: g.awayScore, c: g.homeScore} ].forEach(side => {
                         if (!stats[side.t]) stats[side.t] = { vit: 0, cpo: 0, cco: 0, cat: g.category };
                         stats[side.t].cpo += side.s; stats[side.t].cco += side.c;
@@ -575,7 +575,9 @@
                 const sortedPts = Object.entries(stats).sort((a,b) => b[1].cpo - a[1].cpo);
                 const sortedVit = Object.entries(stats).sort((a,b) => b[1].vit - a[1].vit);
                 const sortedDef = Object.entries(stats).sort((a,b) => a[1].cco - b[1].cco);
+                
                 return {
+                    totalPoints,
                     topScorers: sortedPts.slice(0, 5),
                     mostVictories: sortedVit.slice(0, 5),
                     bestDefense: sortedDef.slice(0, 5)
@@ -651,7 +653,6 @@
                             ))}
                         </div>
 
-                        {/* View Classificação Atualizada - Inclusão de J, V, D, PRO, CON, SDO, PTS */}
                         {view === 'standings' && (
                             <div className="bento-grid">
                                 {Object.keys(initialTournamentData.teams[activeTab] || {}).map(group => (
@@ -793,8 +794,8 @@
                             <>
                                 <div className="stats-bento">
                                     <div className="stat-box glass-panel highlight">
-                                        <div className="stat-value">{allStats.topScorers[0]?.[1].cpo || 0}</div>
-                                        <div className="stat-label">Maior Pontuador</div>
+                                        <div className="stat-value">{allStats.totalPoints}</div>
+                                        <div className="stat-label">Pontos Marcados (Geral)</div>
                                     </div>
                                     <div className="stat-box glass-panel">
                                         <div className="stat-value">{allStats.mostVictories[0]?.[1].vit || 0}</div>
@@ -808,7 +809,7 @@
 
                                 <div className="bento-grid">
                                     <div className="card glass-panel">
-                                        <h2>🔥 Equipes mais Ofensivas</h2>
+                                        <h2>🔥 Melhores Ataques</h2>
                                         <table>
                                             <thead><tr><th>Equipe</th><th className="stat-cell">Pontos</th></tr></thead>
                                             <tbody>
