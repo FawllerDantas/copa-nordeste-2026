@@ -40,7 +40,7 @@
             --text-dark: #0f172a;
         }
 
-        /* Light Mode Opcional (Mantendo a funcionalidade do botão) */
+        /* Light Mode Opcional */
         [data-theme="light"] {
             --future-dust: #f8fafc;
             --future-dust-lighter: #ffffff;
@@ -54,10 +54,8 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            /* Tipografia Dinâmica - Corpo */
             font-family: 'Inter', sans-serif;
             background-color: var(--future-dust);
-            /* Textura Tátil (Mesh Gradient Simulado + Granulado sutil via radial) */
             background-image: 
                 radial-gradient(circle at 10% 20%, rgba(29, 66, 138, 0.15) 0%, transparent 40%),
                 radial-gradient(circle at 90% 80%, rgba(255, 199, 44, 0.1) 0%, transparent 40%);
@@ -70,7 +68,6 @@
         }
 
         h1, h2, h3, .tab, .stat-value, .team-label, .score-input, .day-header {
-            /* Tipografia Dinâmica - Títulos (Minimalismo Bolder) */
             font-family: 'Bebas Neue', sans-serif;
             letter-spacing: 1px;
             font-weight: normal;
@@ -153,15 +150,6 @@
         .header-text h1 { font-size: 2.2rem; color: var(--text-main); margin-bottom: 4px; }
         .header-text p { color: var(--text-muted); font-size: 0.95rem; font-weight: 500; }
 
-        /* Micro-interações de Movimento (Squash & Stretch) */
-        .btn, .tab, .icon-btn, .game-card {
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* Bounce effect */
-        }
-        
-        .btn:active, .tab:active, .icon-btn:active {
-            transform: scale(0.92) translateY(2px);
-        }
-
         .header-actions { display: flex; gap: 12px; }
         .icon-btn {
             width: 44px; height: 44px;
@@ -169,11 +157,13 @@
             background: var(--future-dust-lighter); color: var(--text-main);
             cursor: pointer; font-size: 20px;
             display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         .icon-btn:hover { background: var(--warriors-blue); color: white; transform: translateY(-4px); }
+        .icon-btn:active { transform: scale(0.92) translateY(2px); }
         .icon-btn.active { background: var(--golden-yellow); color: var(--text-dark); }
 
-        /* Tabs Premium */
+        /* Tabs */
         .tabs-container {
             display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;
             background: var(--glass-bg); padding: 8px; border-radius: 16px;
@@ -184,8 +174,10 @@
             background: transparent; border: none; padding: 12px 28px;
             border-radius: 12px; cursor: pointer; font-size: 1.2rem;
             color: var(--text-muted); position: relative;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         .tab:hover { color: var(--text-main); transform: translateY(-2px); }
+        .tab:active { transform: scale(0.92) translateY(2px); }
         .tab.active {
             background: var(--warriors-blue); color: white;
             box-shadow: 0 4px 15px rgba(29, 66, 138, 0.4);
@@ -193,6 +185,42 @@
         .tab.active-alt {
             background: var(--golden-yellow); color: var(--text-dark);
             box-shadow: 0 4px 15px rgba(255, 199, 44, 0.4);
+        }
+
+        /* Filtros dos Jogos */
+        .filter-bar {
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            flex: 1;
+            min-width: 200px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            background: var(--future-dust-lighter);
+            color: var(--text-main);
+            border: 1px solid var(--glass-border);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1em;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--golden-yellow);
+            box-shadow: 0 0 0 3px rgba(255, 199, 44, 0.1);
         }
 
         /* Bento Grids */
@@ -210,7 +238,7 @@
             border-bottom: 2px solid var(--glass-border); padding-bottom: 12px;
         }
 
-        /* Stats Grid (Top Bento) */
+        /* Stats Grid */
         .stats-bento {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -228,7 +256,7 @@
         .stat-value { font-size: 3rem; color: var(--golden-yellow); line-height: 1; margin-bottom: 8px; }
         .stat-label { font-size: 0.9rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
 
-        /* Tables (Typography Adjustments) */
+        /* Tables */
         .table-container { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
         th {
@@ -244,7 +272,7 @@
 
         /* Games / Placares */
         .games-list { display: grid; gap: 16px; }
-        .game-card { border-left: 6px solid var(--warriors-blue); padding: 20px; }
+        .game-card { border-left: 6px solid var(--warriors-blue); padding: 20px; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
         .game-card:hover { transform: translateY(-4px) scale(1.01); box-shadow: 0 12px 30px rgba(0,0,0,0.3); border-left-color: var(--golden-yellow); }
         .game-card.completed { border-left-color: var(--success); }
 
@@ -270,7 +298,7 @@
 
         /* Interactive Brackets (Chaveamento) */
         .bracket-container {
-            display: flex; justify-content: center; gap: 40px; overflow-x: auto; padding: 20px 0;
+            display: flex; justify-content: center; gap: 40px; overflow-x: auto; padding: 20px 0; align-items: center;
         }
         .bracket-round { display: flex; flex-direction: column; justify-content: space-around; gap: 20px; }
         .bracket-match {
@@ -287,11 +315,45 @@
         .bracket-team:first-child { border-bottom: 1px solid var(--glass-border); }
         .bracket-score { color: var(--golden-yellow); }
 
+        /* Champion Box em Destaque */
+        .champion-box {
+            background: linear-gradient(135deg, var(--golden-yellow) 0%, var(--golden-yellow-dark) 100%);
+            color: var(--text-dark);
+            border: none;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(255, 199, 44, 0.5);
+            transform: scale(1.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-width: 240px;
+        }
+        .champion-box:hover {
+            transform: scale(1.15);
+            box-shadow: 0 12px 40px rgba(255, 199, 44, 0.6);
+        }
+        .champion-icon {
+            font-size: 3.5rem;
+            margin-bottom: 8px;
+            line-height: 1;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
+        }
+        .champion-name {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
         /* Buttons & Utils */
         .btn {
             background: var(--warriors-blue); color: white; border: none;
             padding: 14px 28px; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
+        .btn:active { transform: scale(0.92) translateY(2px); }
         .btn-primary { background: var(--golden-yellow); color: var(--text-dark); }
         
         .modal-overlay {
@@ -319,12 +381,15 @@
             z-index: 2000; display: flex; align-items: center; gap: 12px; font-weight: 600;
         }
 
+        .empty-state { text-align: center; padding: 40px; color: var(--text-muted); font-size: 1.1rem; }
+
         @media (max-width: 768px) {
             .game-teams { grid-template-columns: 1fr; gap: 10px; }
             .team.home { justify-content: flex-start; }
             .vs { display: none; }
             .header-text h1 { font-size: 1.8rem; }
             .stat-value { font-size: 2.2rem; }
+            .bracket-container { flex-direction: column; gap: 30px; }
         }
     </style>
 </head>
@@ -395,15 +460,26 @@
 
         function App() {
             const [activeTab, setActiveTab] = useState('U13');
-            const [view, setView] = useState('standings');
+            const [view, setView] = useState('bracket');
             const [theme, setTheme] = useState(() => localStorage.getItem('cni2026_theme') || 'dark');
             const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem('cni2026_admin') === 'true');
             const [showAdminModal, setShowAdminModal] = useState(false);
             const [adminPassword, setAdminPassword] = useState('');
+            
+            const [filterDay, setFilterDay] = useState('all');
+            const [filterVenue, setFilterVenue] = useState('all');
+            const [filterStatus, setFilterStatus] = useState('all');
+
             const [games, setGames] = useState(() => {
                 const saved = localStorage.getItem('cni2026_games');
                 return saved ? JSON.parse(saved) : initialTournamentData.games;
             });
+
+            useEffect(() => {
+                setFilterDay('all');
+                setFilterVenue('all');
+                setFilterStatus('all');
+            }, [activeTab]);
 
             useEffect(() => {
                 document.documentElement.setAttribute('data-theme', theme);
@@ -451,8 +527,19 @@
             };
 
             const categoryGames = games.filter(g => g.category === activeTab);
-            const completedGames = games.filter(g => g.homeScore !== undefined).reverse().slice(0, 5); // Ticker data
+            const completedGames = games.filter(g => g.homeScore !== undefined).reverse().slice(0, 5);
             const bracketGames = categoryGames.filter(g => g.phase === 'playoffs' || g.phase === 'finals');
+            
+            const availableDays = [...new Set(categoryGames.map(g => g.day))].sort();
+            const availableVenues = [...new Set(categoryGames.map(g => g.venue))].sort();
+
+            const filteredGames = categoryGames.filter(game => {
+                if (filterDay !== 'all' && game.day !== filterDay) return false;
+                if (filterVenue !== 'all' && game.venue !== filterVenue) return false;
+                if (filterStatus === 'completed' && game.homeScore === undefined) return false;
+                if (filterStatus === 'pending' && game.homeScore !== undefined) return false;
+                return true;
+            });
 
             const allStats = useMemo(() => {
                 const stats = {};
@@ -473,9 +560,21 @@
                 };
             }, [games]);
 
+            // Lógica para determinar o Campeão
+            const determineChampion = () => {
+                const finalMatch = bracketGames.find(g => g.group === 'FINAL');
+                if (finalMatch && finalMatch.homeScore !== undefined && finalMatch.awayScore !== undefined) {
+                    if (finalMatch.homeScore > finalMatch.awayScore) return finalMatch.homeTeam;
+                    if (finalMatch.awayScore > finalMatch.homeScore) return finalMatch.awayTeam;
+                    return 'EMPATE'; // Cobre caso raro de empate
+                }
+                return 'A DEFINIR';
+            };
+
+            const championName = determineChampion();
+
             return (
                 <>
-                    {/* Score Ticker Persistente */}
                     {completedGames.length > 0 && (
                         <div className="ticker-wrap">
                             <div className="ticker">
@@ -484,7 +583,6 @@
                                         <div className="ticker-item">
                                             {g.homeTeam} <span className="highlight">{g.homeScore} x {g.awayScore}</span> {g.awayTeam} ({g.category})
                                         </div>
-                                        {/* Duplicando para efeito infinito contínuo */}
                                         <div className="ticker-item" style={{display: i === completedGames.length - 1 ? 'none' : 'inline-block'}}> • </div>
                                     </React.Fragment>
                                 ))}
@@ -532,7 +630,6 @@
                             ))}
                         </div>
 
-                        {/* View: Classificação (Bento Grid) */}
                         {view === 'standings' && (
                             <div className="bento-grid">
                                 {Object.keys(initialTournamentData.teams[activeTab] || {}).map(group => (
@@ -560,7 +657,6 @@
                             </div>
                         )}
 
-                        {/* View: Chaveamento Interativo */}
                         {view === 'bracket' && (
                             <div className="card glass-panel" style={{ overflowX: 'auto' }}>
                                 <h2>🏆 Fase Final - {activeTab}</h2>
@@ -580,6 +676,7 @@
                                             </div>
                                         ))}
                                     </div>
+                                    
                                     <div className="bracket-round">
                                         <h3 style={{color: 'var(--golden-yellow)', textAlign: 'center'}}>Grande Final</h3>
                                         {bracketGames.filter(g => g.group === 'FINAL').map(g => (
@@ -595,36 +692,69 @@
                                             </div>
                                         ))}
                                     </div>
+
+                                    {/* Nova Secção: Caixa do Campeão */}
+                                    <div className="bracket-round">
+                                        <h3 style={{color: 'var(--success)', textAlign: 'center'}}>Campeão</h3>
+                                        <div className="bracket-match champion-box">
+                                            <div className="champion-icon">🏆</div>
+                                            <div className="champion-name">{championName}</div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         )}
 
-                        {/* View: Jogos */}
                         {view === 'games' && (
-                            <div className="games-list">
-                                {categoryGames.map(game => (
-                                    <div key={game.id} className={`game-card glass-panel ${game.homeScore !== undefined ? 'completed' : ''}`}>
-                                        <div className="game-header">
-                                            <span className="badge badge-primary">{game.day} - {game.time} | {game.venue}</span>
-                                            <span className="badge badge-info">{game.phase === 'groups' ? `CHAVE ${game.group}` : game.group}</span>
-                                        </div>
-                                        <div className="game-teams">
-                                            <div className="team home">
-                                                <span className="team-label">{game.homeTeam}</span>
-                                                <input type="number" className="score-input" value={game.homeScore ?? ''} onChange={e => updateScore(game.id, 'home', e.target.value)} disabled={!isAdmin} />
-                                            </div>
-                                            <span className="vs">X</span>
-                                            <div className="team">
-                                                <input type="number" className="score-input" value={game.awayScore ?? ''} onChange={e => updateScore(game.id, 'away', e.target.value)} disabled={!isAdmin} />
-                                                <span className="team-label">{game.awayTeam}</span>
-                                            </div>
-                                        </div>
+                            <>
+                                <div className="filter-bar glass-panel">
+                                    <select className="filter-select" value={filterDay} onChange={e => setFilterDay(e.target.value)}>
+                                        <option value="all">📅 Todos os Dias</option>
+                                        {availableDays.map(d => <option key={d} value={d}>Dia {d}</option>)}
+                                    </select>
+                                    
+                                    <select className="filter-select" value={filterVenue} onChange={e => setFilterVenue(e.target.value)}>
+                                        <option value="all">📍 Todos os Locais</option>
+                                        {availableVenues.map(v => <option key={v} value={v}>{v}</option>)}
+                                    </select>
+
+                                    <select className="filter-select" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+                                        <option value="all">⏱️ Todos os Status</option>
+                                        <option value="pending">A Jogar</option>
+                                        <option value="completed">Encerrados</option>
+                                    </select>
+                                </div>
+
+                                {filteredGames.length === 0 ? (
+                                    <div className="empty-state glass-panel">
+                                        Nenhum jogo encontrado para os filtros selecionados.
                                     </div>
-                                ))}
-                            </div>
+                                ) : (
+                                    <div className="games-list">
+                                        {filteredGames.map(game => (
+                                            <div key={game.id} className={`game-card glass-panel ${game.homeScore !== undefined ? 'completed' : ''}`}>
+                                                <div className="game-header">
+                                                    <span className="badge badge-primary">{game.day} - {game.time} | {game.venue}</span>
+                                                    <span className="badge badge-info">{game.phase === 'groups' ? `CHAVE ${game.group}` : game.group}</span>
+                                                </div>
+                                                <div className="game-teams">
+                                                    <div className="team home">
+                                                        <span className="team-label">{game.homeTeam}</span>
+                                                        <input type="number" className="score-input" value={game.homeScore ?? ''} onChange={e => updateScore(game.id, 'home', e.target.value)} disabled={!isAdmin} placeholder="-" />
+                                                    </div>
+                                                    <span className="vs">X</span>
+                                                    <div className="team">
+                                                        <input type="number" className="score-input" value={game.awayScore ?? ''} onChange={e => updateScore(game.id, 'away', e.target.value)} disabled={!isAdmin} placeholder="-" />
+                                                        <span className="team-label">{game.awayTeam}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </>
                         )}
 
-                        {/* View: Estatísticas (Maximalismo de Dados) */}
                         {view === 'stats' && (
                             <>
                                 <div className="stats-bento">
@@ -669,7 +799,6 @@
                             </>
                         )}
 
-                        {/* Admin Modal com efeito Glass */}
                         {showAdminModal && (
                             <div className="modal-overlay" onClick={() => setShowAdminModal(false)}>
                                 <div className="modal glass-panel" onClick={e => e.stopPropagation()}>
