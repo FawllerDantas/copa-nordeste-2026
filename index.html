@@ -286,21 +286,19 @@
         .stat-cell { text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
         .text-yellow { color: var(--golden-yellow); font-size: 1.1rem;}
         
-        /* Tooltip na Tabela */
-        .tooltip-container { position: relative; }
-        .tooltip-content {
-            display: none; background: #131420; color: #fff;
-            text-align: left; border-radius: 8px; padding: 16px; position: absolute; z-index: 99999;
-            bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); width: max-content; min-width: 280px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8); border: 2px solid var(--golden-yellow); 
-            font-family: 'Inter', sans-serif; font-weight: 400; font-size: 0.85rem;
+        /* Tooltip Portal Global */
+        .tooltip-portal {
+            background: #131420; color: #fff; text-align: left; border-radius: 8px; padding: 16px;
+            position: absolute; z-index: 999999; transform: translateX(-50%) translateY(-100%);
+            width: max-content; min-width: 280px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            border: 2px solid var(--golden-yellow); font-family: 'Inter', sans-serif; font-weight: 400; font-size: 0.85rem;
+            pointer-events: none;
         }
         /* Triângulo do Tooltip */
-        .tooltip-content::after {
+        .tooltip-portal::after {
             content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
             border-width: 8px; border-style: solid; border-color: var(--golden-yellow) transparent transparent transparent;
         }
-        .tooltip-container:hover .tooltip-content { display: block; }
 
         /* Games / Placares */
         .games-list { display: grid; gap: 16px; }
@@ -529,6 +527,7 @@
 
             const [games, setGames] = useState(initialTournamentData.games.map(g => ({...g, status: 'pending'})));
             const [isSupabaseConnected, setIsSupabaseConnected] = useState(false);
+            const [hoveredStats, setHoveredStats] = useState(null);
 
             // Fetch inicial dos dados
             useEffect(() => {
@@ -729,6 +728,21 @@
                 });
             };
 
+            const handleMouseEnterTooltip = (e, teamName, category, jog) => {
+                const rect = e.target.getBoundingClientRect();
+                setHoveredStats({
+                    team: teamName,
+                    cat: category,
+                    jog: jog,
+                    x: rect.left + window.scrollX + (rect.width / 2),
+                    y: rect.top + window.scrollY - 10
+                });
+            };
+
+            const handleMouseLeaveTooltip = () => {
+                setHoveredStats(null);
+            };
+
             return (
                 <>
                     {completedGames.length > 0 && (
@@ -819,27 +833,14 @@
                                                                 {calculateStandings(cat, group).map(team => (
                                                                     <tr key={team.team}>
                                                                         <td className="team-name">{team.team}</td>
-                                                                        <td className="stat-cell tooltip-container" style={{position: 'relative'}}>
-                                                                            <span style={{cursor: 'help', borderBottom: '1px dotted var(--golden-yellow)'}}>{team.JOG}</span>
-                                                                            <div className="tooltip-content">
-                                                                                <div style={{fontWeight: '900', marginBottom: '12px', borderBottom: '1px solid rgba(255,199,44,0.3)', paddingBottom: '8px', fontSize: '1rem'}}>📅 Desempenho: {team.team}</div>
-                                                                                {games.filter(g => g.category === cat && g.status === 'completed' && (g.homeTeam === team.team || g.awayTeam === team.team)).map(g => {
-                                                                                    const isHome = g.homeTeam === team.team;
-                                                                                    const opponent = isHome ? g.awayTeam : g.homeTeam;
-                                                                                    const myScore = isHome ? g.homeScore : g.awayScore;
-                                                                                    const oppScore = isHome ? g.awayScore : g.homeScore;
-                                                                                    const victory = myScore > oppScore;
-                                                                                    return (
-                                                                                        <div key={g.id} style={{display: 'flex', justifyContent: 'space-between', margin: '8px 0', gap: '24px', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.05)', padding: '6px', borderRadius: '6px'}}>
-                                                                                            <span style={{lineHeight: 1.2}}>Dia {g.day}<br/><span style={{fontSize: '0.75rem', opacity: 0.8}}>vs </span><b>{opponent}</b></span>
-                                                                                            <span style={{color: victory ? '#48bb78' : '#f56565', fontWeight: '900', fontSize: '1.05rem', backgroundColor: 'rgba(0,0,0,0.4)', padding: '4px 8px', borderRadius: '4px'}}>{myScore} - {oppScore} {victory ? '(V)' : '(D)'}</span>
-                                                                                        </div>
-                                                                                    );
-                                                                                })}
-                                                                                {team.JOG === 0 && (
-                                                                                    <div style={{fontSize: '0.8rem', color: 'var(--text-muted)'}}>Nenhum jogo concluído.</div>
-                                                                                )}
-                                                                            </div>
+                                                                        <td className="stat-cell">
+                                                                            <span 
+                                                                                style={{cursor: 'help', borderBottom: '1px dotted var(--golden-yellow)', paddingBottom: '2px'}}
+                                                                                onMouseEnter={(e) => handleMouseEnterTooltip(e, team.team, cat, team.JOG)}
+                                                                                onMouseLeave={handleMouseLeaveTooltip}
+                                                                            >
+                                                                                {team.JOG}
+                                                                            </span>
                                                                         </td>
                                                                         <td className="stat-cell">{team.VIT}</td>
                                                                         <td className="stat-cell">{team.DER}</td>
@@ -1059,6 +1060,28 @@
                             <div className={`sync-dot ${isSupabaseConnected ? 'online' : 'offline'}`}></div>
                             {isSupabaseConnected ? 'Nuvem Conectada' : 'Modo Offline (Apenas Local)'}
                         </div>
+
+                        {hoveredStats && (
+                            <div className="tooltip-portal" style={{ top: hoveredStats.y, left: hoveredStats.x }}>
+                                <div style={{fontWeight: '900', marginBottom: '12px', borderBottom: '1px solid rgba(255,199,44,0.3)', paddingBottom: '8px', fontSize: '1rem'}}>📅 Desempenho: {hoveredStats.team}</div>
+                                {games.filter(g => g.category === hoveredStats.cat && g.status === 'completed' && (g.homeTeam === hoveredStats.team || g.awayTeam === hoveredStats.team)).map(g => {
+                                    const isHome = g.homeTeam === hoveredStats.team;
+                                    const opponent = isHome ? g.awayTeam : g.homeTeam;
+                                    const myScore = isHome ? g.homeScore : g.awayScore;
+                                    const oppScore = isHome ? g.awayScore : g.homeScore;
+                                    const victory = myScore > oppScore;
+                                    return (
+                                        <div key={g.id} style={{display: 'flex', justifyContent: 'space-between', margin: '8px 0', gap: '24px', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.05)', padding: '6px', borderRadius: '6px'}}>
+                                            <span style={{lineHeight: 1.2}}>Dia {g.day}<br/><span style={{fontSize: '0.75rem', opacity: 0.8}}>vs </span><b>{opponent}</b></span>
+                                            <span style={{color: victory ? '#48bb78' : '#f56565', fontWeight: '900', fontSize: '1.05rem', backgroundColor: 'rgba(0,0,0,0.4)', padding: '4px 8px', borderRadius: '4px'}}>{myScore} - {oppScore} {victory ? '(V)' : '(D)'}</span>
+                                        </div>
+                                    );
+                                })}
+                                {hoveredStats.jog === 0 && (
+                                    <div style={{fontSize: '0.8rem', color: 'var(--text-muted)'}}>Nenhum jogo concluído.</div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </>
             );
