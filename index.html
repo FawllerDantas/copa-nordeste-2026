@@ -509,6 +509,7 @@
             const [filterDay, setFilterDay] = useState('all');
             const [filterVenue, setFilterVenue] = useState('all');
             const [filterStatus, setFilterStatus] = useState('all');
+            const [filterTeam, setFilterTeam] = useState('all');
 
             const [games, setGames] = useState(initialTournamentData.games.map(g => ({...g, status: 'pending'})));
             const [isSupabaseConnected, setIsSupabaseConnected] = useState(false);
@@ -546,6 +547,7 @@
                 setFilterDay('all');
                 setFilterVenue('all');
                 setFilterStatus('all');
+                setFilterTeam('all');
             }, [activeTab]);
 
             useEffect(() => {
@@ -676,12 +678,14 @@
             
             const availableDays = [...new Set(categoryGames.map(g => g.day))].sort();
             const availableVenues = [...new Set(categoryGames.map(g => g.venue))].sort();
+            const availableTeams = [...new Set([...categoryGames.map(g => g.homeTeam), ...categoryGames.map(g => g.awayTeam)])].sort();
 
             const filteredGames = categoryGames.filter(game => {
                 if (filterDay !== 'all' && game.day !== filterDay) return false;
                 if (filterVenue !== 'all' && game.venue !== filterVenue) return false;
                 if (filterStatus === 'completed' && game.status !== 'completed') return false;
                 if (filterStatus === 'pending' && game.status === 'completed') return false;
+                if (filterTeam !== 'all' && game.homeTeam !== filterTeam && game.awayTeam !== filterTeam) return false;
                 return true;
             });
 
@@ -869,7 +873,7 @@
 
                         {view === 'games' && (
                             <>
-                                <div className="filter-bar glass-panel">
+                                <div className="filter-bar glass-panel" style={{display: 'flex', flexWrap: 'wrap', gap: '10px'}}>
                                     <select className="filter-select" value={filterDay} onChange={e => setFilterDay(e.target.value)}>
                                         <option value="all">📅 Todos os Dias</option>
                                         {availableDays.map(d => <option key={d} value={d}>Dia {d}</option>)}
@@ -884,6 +888,11 @@
                                         <option value="all">⏱️ Todos os Status</option>
                                         <option value="pending">A Jogar</option>
                                         <option value="completed">Encerrados</option>
+                                    </select>
+                                    
+                                    <select className="filter-select" value={filterTeam} onChange={e => setFilterTeam(e.target.value)}>
+                                        <option value="all">🛡️ Todos os Clubes</option>
+                                        {availableTeams.map(t => <option key={t} value={t}>{t}</option>)}
                                     </select>
                                 </div>
 
