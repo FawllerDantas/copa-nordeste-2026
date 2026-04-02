@@ -285,6 +285,17 @@
         .team-name { font-weight: 600; font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; letter-spacing: 1px;}
         .stat-cell { text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
         .text-yellow { color: var(--golden-yellow); font-size: 1.1rem;}
+        
+        /* Tooltip na Tabela */
+        .tooltip-container { position: relative; }
+        .tooltip-content {
+            visibility: hidden; opacity: 0; background: var(--future-dust-darker); color: #fff;
+            text-align: left; border-radius: 8px; padding: 12px; position: absolute; z-index: 999;
+            bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-10px); width: max-content; min-width: 250px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.8); transition: all 0.3s; pointer-events: none;
+            border: 1px solid var(--golden-yellow); font-family: 'Inter', sans-serif; font-weight: 400;
+        }
+        .tooltip-container:hover .tooltip-content { visibility: visible; opacity: 1; transform: translateX(-50%) translateY(-5px); }
 
         /* Games / Placares */
         .games-list { display: grid; gap: 16px; }
@@ -803,7 +814,28 @@
                                                                 {calculateStandings(cat, group).map(team => (
                                                                     <tr key={team.team}>
                                                                         <td className="team-name">{team.team}</td>
-                                                                        <td className="stat-cell">{team.JOG}</td>
+                                                                        <td className="stat-cell tooltip-container" style={{position: 'relative'}}>
+                                                                            <span style={{cursor: 'help', borderBottom: '1px dotted var(--golden-yellow)'}}>{team.JOG}</span>
+                                                                            <div className="tooltip-content">
+                                                                                <div style={{fontWeight: 'bold', marginBottom: '8px', borderBottom: '1px solid #ffffff33', paddingBottom: '4px'}}>Resultados: {team.team}</div>
+                                                                                {games.filter(g => g.category === cat && g.status === 'completed' && (g.homeTeam === team.team || g.awayTeam === team.team)).map(g => {
+                                                                                    const isHome = g.homeTeam === team.team;
+                                                                                    const opponent = isHome ? g.awayTeam : g.homeTeam;
+                                                                                    const myScore = isHome ? g.homeScore : g.awayScore;
+                                                                                    const oppScore = isHome ? g.awayScore : g.homeScore;
+                                                                                    const victory = myScore > oppScore;
+                                                                                    return (
+                                                                                        <div key={g.id} style={{display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', margin: '6px 0', gap: '20px'}}>
+                                                                                            <span>{g.day} x {opponent}</span>
+                                                                                            <span style={{color: victory ? 'var(--success)' : 'var(--danger)', fontWeight: 'bold'}}>{myScore} - {oppScore} {victory ? '(V)' : '(D)'}</span>
+                                                                                        </div>
+                                                                                    );
+                                                                                })}
+                                                                                {team.JOG === 0 && (
+                                                                                    <div style={{fontSize: '0.8rem', color: 'var(--text-muted)'}}>Nenhum jogo concluído.</div>
+                                                                                )}
+                                                                            </div>
+                                                                        </td>
                                                                         <td className="stat-cell">{team.VIT}</td>
                                                                         <td className="stat-cell">{team.DER}</td>
                                                                         <td className="stat-cell">{team.CPO}</td>
@@ -925,6 +957,7 @@
                                                         {isAdmin && <span className="badge badge-primary">{game.time}</span>}
                                                         <span className="badge badge-primary">{game.day} | {game.venue}</span>
                                                         <span className="badge badge-info">{game.phase === 'groups' ? `CHAVE ${game.group}` : game.group}</span>
+                                                        <span className="badge" style={{background: 'var(--golden-yellow)', color: 'black'}}>{game.category}</span>
                                                     </div>
                                                 </div>
                                                 <div className="game-teams">
