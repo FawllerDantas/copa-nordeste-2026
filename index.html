@@ -543,12 +543,7 @@
                 loadData();
             }, []);
 
-            useEffect(() => {
-                setFilterDay('all');
-                setFilterVenue('all');
-                setFilterStatus('all');
-                setFilterTeam('all');
-            }, [activeTab]);
+            // Filtros de estado persistem entre as abas
 
             useEffect(() => {
                 document.documentElement.setAttribute('data-theme', theme);
@@ -672,7 +667,7 @@
                 );
             };
 
-            const categoryGames = games.filter(g => g.category === activeTab);
+            const categoryGames = activeTab === 'all' ? games : games.filter(g => g.category === activeTab);
             const completedGames = games.filter(g => g.status === 'completed' || g.status === 'live').reverse().slice(0, 5);
             const bracketGames = categoryGames.filter(g => g.phase === 'playoffs' || g.phase === 'finals');
             
@@ -763,9 +758,9 @@
                         </header>
 
                         <div className="tabs-container">
-                            {['U13', 'U15', 'U17'].map(cat => (
+                            {['all', 'U13', 'U15', 'U17'].map(cat => (
                                 <button key={cat} className={`tab ${activeTab === cat ? 'active' : ''}`} onClick={() => setActiveTab(cat)}>
-                                    {cat}
+                                    {cat === 'all' ? 'Todas' : cat}
                                 </button>
                             ))}
                         </div>
@@ -786,7 +781,10 @@
                         {/* View Classificação Empilhada e Centralizada */}
                         {view === 'standings' && (
                             <div className="standings-container">
-                                {Object.keys(initialTournamentData.teams[activeTab] || {}).map(group => (
+                                {activeTab === 'all' ? (
+                                    <div className="empty-state glass-panel">Selecione uma categoria específica (Ex: U13) no topo para visualizar a classificação.</div>
+                                ) : (
+                                    Object.keys(initialTournamentData.teams[activeTab] || {}).map(group => (
                                     <div key={group} className="card glass-panel">
                                         <h2>Chave {group}</h2>
                                         <div className="table-container">
@@ -820,14 +818,19 @@
                                             </table>
                                         </div>
                                     </div>
-                                ))}
+                                    </div>
+                                    ))
+                                )}
                             </div>
                         )}
 
                         {view === 'bracket' && (
                             <div className="card glass-panel" style={{ overflowX: 'auto' }}>
-                                <h2>🏆 Fase Final - {activeTab}</h2>
-                                <div className="bracket-container">
+                                <h2>🏆 Fase Final - {activeTab === 'all' ? 'Geral' : activeTab}</h2>
+                                {activeTab === 'all' ? (
+                                    <div className="empty-state">Selecione uma categoria específica para visualizar o chaveamento de playoffs.</div>
+                                ) : (
+                                    <div className="bracket-container">
                                     <div className="bracket-round">
                                         <h3 style={{color: 'var(--text-muted)', textAlign: 'center'}}>Semi-Finais</h3>
                                         {bracketGames.filter(g => g.group.includes('SF')).map(g => (
@@ -868,6 +871,7 @@
                                         </div>
                                     </div>
                                 </div>
+                                )}
                             </div>
                         )}
 
