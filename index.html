@@ -673,9 +673,10 @@
                 games.filter(g => g.homeScore != null).forEach(g => {
                     totalPoints += g.homeScore + g.awayScore;
                     [ {t: g.homeTeam, s: g.homeScore, c: g.awayScore}, {t: g.awayTeam, s: g.awayScore, c: g.homeScore} ].forEach(side => {
-                        if (!stats[side.t]) stats[side.t] = { vit: 0, cpo: 0, cco: 0, cat: g.category };
-                        stats[side.t].cpo += side.s; stats[side.t].cco += side.c;
-                        if (side.s > side.c) stats[side.t].vit++;
+                        const key = `${side.t}_${g.category}`;
+                        if (!stats[key]) stats[key] = { name: side.t, vit: 0, cpo: 0, cco: 0, cat: g.category };
+                        stats[key].cpo += side.s; stats[key].cco += side.c;
+                        if (side.s > side.c) stats[key].vit++;
                     });
                 });
                 const sortedPts = Object.entries(stats).sort((a,b) => b[1].cpo - a[1].cpo);
@@ -920,8 +921,8 @@
                                         <table>
                                             <thead><tr><th>Equipe</th><th className="stat-cell">Pontos</th></tr></thead>
                                             <tbody>
-                                                {allStats.topScorers.map(([name, data]) => (
-                                                    <tr key={name}><td className="team-name">{name} <small style={{color:'var(--text-muted)'}}>({data.cat})</small></td><td className="stat-cell text-yellow">{data.cpo}</td></tr>
+                                                {allStats.topScorers.map(([key, data]) => (
+                                                    <tr key={key}><td className="team-name">{data.name} <small style={{color:'var(--text-muted)'}}>({data.cat})</small></td><td className="stat-cell text-yellow">{data.cpo}</td></tr>
                                                 ))}
                                             </tbody>
                                         </table>
@@ -931,8 +932,8 @@
                                         <table>
                                             <thead><tr><th>Equipe</th><th className="stat-cell">Sofridos</th></tr></thead>
                                             <tbody>
-                                                {allStats.bestDefense.map(([name, data]) => (
-                                                    <tr key={name}><td className="team-name">{name}</td><td className="stat-cell" style={{color:'var(--success)'}}>{data.cco}</td></tr>
+                                                {allStats.bestDefense.map(([key, data]) => (
+                                                    <tr key={key}><td className="team-name">{data.name} <small style={{color:'var(--text-muted)'}}>({data.cat})</small></td><td className="stat-cell" style={{color:'var(--success)'}}>{data.cco}</td></tr>
                                                 ))}
                                             </tbody>
                                         </table>
