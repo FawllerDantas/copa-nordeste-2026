@@ -498,8 +498,8 @@
         };
 
         function App() {
-            const [activeTab, setActiveTab] = useState('U13');
-            const [view, setView] = useState('standings');
+            const [view, setView] = useState('games');
+            const [selectedCategories, setSelectedCategories] = useState(['U13']);
             const [theme, setTheme] = useState(() => localStorage.getItem('cni2026_theme') || 'dark');
             const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem('cni2026_admin') === 'true');
             const [showAdminModal, setShowAdminModal] = useState(false);
@@ -542,8 +542,6 @@
 
                 loadData();
             }, []);
-
-            // Filtros de estado persistem entre as abas
 
             useEffect(() => {
                 document.documentElement.setAttribute('data-theme', theme);
@@ -667,13 +665,12 @@
                 );
             };
 
-            const categoryGames = activeTab === 'all' ? games : games.filter(g => g.category === activeTab);
+            const categoryGames = games.filter(g => selectedCategories.includes(g.category));
             const completedGames = games.filter(g => g.status === 'completed' || g.status === 'live').reverse().slice(0, 5);
-            const bracketGames = categoryGames.filter(g => g.phase === 'playoffs' || g.phase === 'finals');
             
-            const availableDays = [...new Set(categoryGames.map(g => g.day))].sort();
-            const availableVenues = [...new Set(categoryGames.map(g => g.venue))].sort();
-            const availableTeams = [...new Set([...categoryGames.map(g => g.homeTeam), ...categoryGames.map(g => g.awayTeam)])].sort();
+            const availableDays = [...new Set(games.map(g => g.day))].sort();
+            const availableVenues = [...new Set(games.map(g => g.venue))].sort();
+            const availableTeams = [...new Set([...games.map(g => g.homeTeam), ...games.map(g => g.awayTeam)])].sort();
 
             const filteredGames = categoryGames.filter(game => {
                 if (filterDay !== 'all' && game.day !== filterDay) return false;
@@ -708,17 +705,13 @@
                 };
             }, [games]);
 
-            const determineChampion = () => {
-                const finalMatch = bracketGames.find(g => g.group === 'FINAL');
-                if (finalMatch && finalMatch.status === 'completed' && finalMatch.homeScore != null && finalMatch.awayScore != null) {
-                    if (finalMatch.homeScore > finalMatch.awayScore) return finalMatch.homeTeam;
-                    if (finalMatch.awayScore > finalMatch.homeScore) return finalMatch.awayTeam;
-                    return 'EMPATE'; 
-                }
-                return 'A DEFINIR';
+            const toggleCategory = (cat) => {
+                setSelectedCategories(prev => {
+                    if (cat === 'all') return ['U13', 'U15', 'U17'];
+                    const next = prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat];
+                    return next.length > 0 ? next : prev;
+                });
             };
-
-            const championName = determineChampion();
 
             return (
                 <>
@@ -758,9 +751,12 @@
                         </header>
 
                         <div className="tabs-container">
-                            {['all', 'U13', 'U15', 'U17'].map(cat => (
-                                <button key={cat} className={`tab ${activeTab === cat ? 'active' : ''}`} onClick={() => setActiveTab(cat)}>
-                                    {cat === 'all' ? 'Todas' : cat}
+                            <button className="tab" onClick={() => toggleCategory('all')} style={{fontWeight: 900}}>
+                                Todas
+                            </button>
+                            {['U13', 'U15', 'U17'].map(cat => (
+                                <button key={cat} className={`tab ${selectedCategories.includes(cat) ? 'active' : ''}`} onClick={() => toggleCategory(cat)}>
+                                    {cat}
                                 </button>
                             ))}
                         </div>
@@ -778,100 +774,112 @@
                             ))}
                         </div>
 
-                        {/* View Classificação Empilhada e Centralizada */}
                         {view === 'standings' && (
                             <div className="standings-container">
-                                {activeTab === 'all' ? (
-                                    <div className="empty-state glass-panel">Selecione uma categoria específica (Ex: U13) no topo para visualizar a classificação.</div>
+                                {selectedCategories.length === 0 ? (
+                                    <div className="empty-state glass-panel">Selecione pelo menos uma categoria acima para visualizar a classificação.</div>
                                 ) : (
-                                    Object.keys(initialTournamentData.teams[activeTab] || {}).map(group => (
-                                    <div key={group} className="card glass-panel">
-                                        <h2>Chave {group}</h2>
-                                        <div className="table-container">
-                                            <table>
-                                                <thead>
-                                                    <tr>
-                                                        <th>Equipe</th>
-                                                        <th className="stat-cell">J</th>
-                                                        <th className="stat-cell">V</th>
-                                                        <th className="stat-cell">D</th>
-                                                        <th className="stat-cell">PRO</th>
-                                                        <th className="stat-cell">CON</th>
-                                                        <th className="stat-cell">SDO</th>
-                                                        <th className="stat-cell text-yellow">PTS</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {calculateStandings(activeTab, group).map(team => (
-                                                        <tr key={team.team}>
-                                                            <td className="team-name">{team.team}</td>
-                                                            <td className="stat-cell">{team.JOG}</td>
-                                                            <td className="stat-cell">{team.VIT}</td>
-                                                            <td className="stat-cell">{team.DER}</td>
-                                                            <td className="stat-cell">{team.CPO}</td>
-                                                            <td className="stat-cell">{team.CCO}</td>
-                                                            <td className="stat-cell">{team.SDO}</td>
-                                                            <td className="stat-cell text-yellow" style={{fontWeight: 900}}>{team.PTS}</td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
+                                    selectedCategories.map(cat => (
+                                        <div key={cat} style={{width: '100%', marginBottom: '30px'}}>
+                                            <h2 style={{textAlign: 'center', color: 'var(--warriors-blue-light)', marginBottom: '15px'}}>Classificação: {cat}</h2>
+                                            {Object.keys(initialTournamentData.teams[cat] || {}).map(group => (
+                                                <div key={group} className="card glass-panel" style={{marginBottom: '20px'}}>
+                                                    <h2>Chave {group}</h2>
+                                                    <div className="table-container">
+                                                        <table>
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Equipe</th>
+                                                                    <th className="stat-cell">J</th>
+                                                                    <th className="stat-cell">V</th>
+                                                                    <th className="stat-cell">D</th>
+                                                                    <th className="stat-cell">PRO</th>
+                                                                    <th className="stat-cell">CON</th>
+                                                                    <th className="stat-cell">SDO</th>
+                                                                    <th className="stat-cell text-yellow">PTS</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {calculateStandings(cat, group).map(team => (
+                                                                    <tr key={team.team}>
+                                                                        <td className="team-name">{team.team}</td>
+                                                                        <td className="stat-cell">{team.JOG}</td>
+                                                                        <td className="stat-cell">{team.VIT}</td>
+                                                                        <td className="stat-cell">{team.DER}</td>
+                                                                        <td className="stat-cell">{team.CPO}</td>
+                                                                        <td className="stat-cell">{team.CCO}</td>
+                                                                        <td className="stat-cell">{team.SDO}</td>
+                                                                        <td className="stat-cell text-yellow" style={{fontWeight: 900}}>{team.PTS}</td>
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
-                                    </div>
-                                    </div>
                                     ))
                                 )}
                             </div>
                         )}
 
                         {view === 'bracket' && (
-                            <div className="card glass-panel" style={{ overflowX: 'auto' }}>
-                                <h2>🏆 Fase Final - {activeTab === 'all' ? 'Geral' : activeTab}</h2>
-                                {activeTab === 'all' ? (
-                                    <div className="empty-state">Selecione uma categoria específica para visualizar o chaveamento de playoffs.</div>
-                                ) : (
-                                    <div className="bracket-container">
-                                    <div className="bracket-round">
-                                        <h3 style={{color: 'var(--text-muted)', textAlign: 'center'}}>Semi-Finais</h3>
-                                        {bracketGames.filter(g => g.group.includes('SF')).map(g => (
-                                            <div key={g.id} className="bracket-match">
-                                                <div className="bracket-team">
-                                                    <span>{g.homeTeam}</span>
-                                                    <span className="bracket-score">{g.homeScore != null ? g.homeScore : '-'}</span>
-                                                </div>
-                                                <div className="bracket-team">
-                                                    <span>{g.awayTeam}</span>
-                                                    <span className="bracket-score">{g.awayScore != null ? g.awayScore : '-'}</span>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
+                            <div>
+                                {selectedCategories.map(cat => {
+                                    const catBracketGames = games.filter(g => g.category === cat && (g.phase === 'playoffs' || g.phase === 'finals'));
+                                    const finalMatch = catBracketGames.find(g => g.group === 'FINAL');
+                                    let champ = 'A DEFINIR';
+                                    if (finalMatch && finalMatch.status === 'completed' && finalMatch.homeScore != null && finalMatch.awayScore != null) {
+                                        if (finalMatch.homeScore > finalMatch.awayScore) champ = finalMatch.homeTeam;
+                                        else if (finalMatch.awayScore > finalMatch.homeScore) champ = finalMatch.awayTeam;
+                                        else champ = 'EMPATE';
+                                    }
                                     
-                                    <div className="bracket-round">
-                                        <h3 style={{color: 'var(--golden-yellow)', textAlign: 'center'}}>Grande Final</h3>
-                                        {bracketGames.filter(g => g.group === 'FINAL').map(g => (
-                                            <div key={g.id} className="bracket-match" style={{borderColor: 'var(--golden-yellow)'}}>
-                                                <div className="bracket-team">
-                                                    <span>{g.homeTeam}</span>
-                                                    <span className="bracket-score">{g.homeScore != null ? g.homeScore : '-'}</span>
+                                    return (
+                                        <div key={cat} className="card glass-panel" style={{ overflowX: 'auto', marginBottom: '20px' }}>
+                                            <h2>🏆 Fase Final - {cat}</h2>
+                                            <div className="bracket-container">
+                                                <div className="bracket-round">
+                                                    <h3 style={{color: 'var(--text-muted)', textAlign: 'center'}}>Semi-Finais</h3>
+                                                    {catBracketGames.filter(g => g.group.includes('SF')).map(g => (
+                                                        <div key={g.id} className="bracket-match">
+                                                            <div className="bracket-team">
+                                                                <span>{g.homeTeam}</span>
+                                                                <span className="bracket-score">{g.homeScore != null ? g.homeScore : '-'}</span>
+                                                            </div>
+                                                            <div className="bracket-team">
+                                                                <span>{g.awayTeam}</span>
+                                                                <span className="bracket-score">{g.awayScore != null ? g.awayScore : '-'}</span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                                <div className="bracket-team">
-                                                    <span>{g.awayTeam}</span>
-                                                    <span className="bracket-score">{g.awayScore != null ? g.awayScore : '-'}</span>
+                                                <div className="bracket-round">
+                                                    <h3 style={{color: 'var(--golden-yellow)', textAlign: 'center'}}>Grande Final</h3>
+                                                    {catBracketGames.filter(g => g.group === 'FINAL').map(g => (
+                                                        <div key={g.id} className="bracket-match" style={{borderColor: 'var(--golden-yellow)'}}>
+                                                            <div className="bracket-team">
+                                                                <span>{g.homeTeam}</span>
+                                                                <span className="bracket-score">{g.homeScore != null ? g.homeScore : '-'}</span>
+                                                            </div>
+                                                            <div className="bracket-team">
+                                                                <span>{g.awayTeam}</span>
+                                                                <span className="bracket-score">{g.awayScore != null ? g.awayScore : '-'}</span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <div className="bracket-round">
+                                                    <h3 style={{color: 'var(--success)', textAlign: 'center'}}>Campeão</h3>
+                                                    <div className="bracket-match champion-box">
+                                                        <div className="champion-icon">🏆</div>
+                                                        <div className="champion-name">{champ}</div>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        ))}
-                                    </div>
-
-                                    <div className="bracket-round">
-                                        <h3 style={{color: 'var(--success)', textAlign: 'center'}}>Campeão</h3>
-                                        <div className="bracket-match champion-box">
-                                            <div className="champion-icon">🏆</div>
-                                            <div className="champion-name">{championName}</div>
                                         </div>
-                                    </div>
-                                </div>
-                                )}
+                                    );
+                                })}
                             </div>
                         )}
 
