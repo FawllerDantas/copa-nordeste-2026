@@ -615,12 +615,12 @@
                     });
                     
                     if (error) {
-                        console.error("Erro no Supabase:", error.message);
+                        console.error("Erro no Supabase:", error);
                         if (error.code === '42501') {
-                            showToast('Acesso Negado: Permissão insuficiente (RLS configurado?).');
+                            showToast('Acesso Negado: Crie as Políticas de RLS (UPDATE/INSERT) no Supabase.');
                             setIsAdmin(false);
                         } else {
-                            showToast('Erro ao salvar no banco de dados!');
+                            showToast('Erro: ' + (error.message || 'Falha ao salvar no banco.'));
                         }
                     } else {
                         showToast('✓ Placar Salvo com Sucesso!');
