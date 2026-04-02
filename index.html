@@ -524,7 +524,7 @@
                                 // Mescla os placares do BD com os dados fixos
                                 const mergedGames = initialTournamentData.games.map(baseGame => {
                                     const dbGame = data.find(dg => dg.id === baseGame.id);
-                                    return dbGame ? { ...baseGame, homeScore: dbGame.homeScore, awayScore: dbGame.awayScore, status: dbGame.status || 'pending' } : { ...baseGame, status: 'pending' };
+                                    return dbGame ? { ...baseGame, homeScore: dbGame.homescore, awayScore: dbGame.awayscore, status: dbGame.status || 'pending' } : { ...baseGame, status: 'pending' };
                                 });
                                 setGames(mergedGames);
                                 return;
@@ -609,8 +609,8 @@
                 try {
                     const { error } = await supabaseClient.from('games').upsert({
                         id: gameId,
-                        homeScore: gameToSave.homeScore,
-                        awayScore: gameToSave.awayScore,
+                        homescore: gameToSave.homeScore,
+                        awayscore: gameToSave.awayScore,
                         status: gameToSave.status
                     });
                     
