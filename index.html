@@ -511,6 +511,42 @@
             setTimeout(() => toast.remove(), 3000);
         };
 
+        const getLogoPath = (teamName) => {
+            if (!teamName) return null;
+            
+            const name = teamName.toUpperCase();
+            if (name.includes('AEROCLUBE')) return './assets/logos/aeroclube-rn.png';
+            if (name.includes('FENIX')) return './assets/logos/fenix-rn.jpg';
+            if (name.includes('AADB')) return './assets/logos/aadb-pe.png';
+            if (name.includes('BASQ')) return './assets/logos/basquete-pb.png';
+            if (name.includes('BNB')) return './assets/logos/bnb-pe.png';
+            if (name.includes('DRG')) return './assets/logos/drg-rn.png';
+            if (name.includes('ELITE')) return './assets/logos/elite-rn.png';
+            if (name.includes('FITCAMP')) return './assets/logos/fitcamp-pe.png';
+            if (name.includes('PAJUSSARA') || name.includes('PAJUÇARA')) return './assets/logos/icpajussara-al.png';
+            if (name.includes('MARECHAIS')) return './assets/logos/marechais-al.png';
+            if (name.includes('RA10') || name.includes('RAI10')) return './assets/logos/rai10-ce.png';
+            if (name.includes('SPORT')) return './assets/logos/sport-pe.png';
+
+            return './assets/logos/' + teamName.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '.png';
+        };
+
+        const TeamLogo = ({ team, size = 30 }) => {
+            return (
+                <div style={{position: 'relative', width: size, height: size, display: 'inline-block', verticalAlign: 'middle', flexShrink: 0}}>
+                    <img 
+                        src={getLogoPath(team)} 
+                        alt={team} 
+                        style={{width: size, height: size, objectFit: 'contain', background: 'rgba(255,255,255,0.1)', borderRadius: '50%', padding: '2px'}} 
+                        onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} 
+                    />
+                    <div style={{display: 'none', width: size, height: size, borderRadius: '50%', background: 'var(--warriors-blue)', border: '1px solid var(--golden-yellow)', color: 'var(--golden-yellow)', justifyContent: 'center', alignItems: 'center', fontSize: size * 0.4, fontWeight: 'bold'}}>
+                        {team ? team.substring(0, 2).toUpperCase() : '?'}
+                    </div>
+                </div>
+            );
+        };
+
         function App() {
             const [view, setView] = useState('games');
             const [selectedCategories, setSelectedCategories] = useState(['U13']);
@@ -583,11 +619,21 @@
                     showToast('Senha ou E-mail Incorretos'); 
                 } else {
                     setIsAdmin(true); 
-                    setShowAdminModal(false); 
                     setAdminPassword('');
                     localStorage.setItem('cni2026_admin', 'true');
                     showToast('Acesso de Administrador Liberado na Nuvem');
                 }
+            };
+
+            const handleAdminLogout = async () => {
+                if (supabaseClient) {
+                    await supabaseClient.auth.signOut();
+                }
+                setIsAdmin(false);
+                setAdminEmail('');
+                setAdminPassword('');
+                localStorage.setItem('cni2026_admin', 'false');
+                showToast('Você saiu com sucesso.');
             };
 
             const updateScoreLocal = (gameId, team, score) => {
@@ -608,6 +654,43 @@
                 ));
             };
 
+            const addHighlightPlayer = (gameId, type) => {
+                if (!isAdmin) return;
+                setGames(prev => prev.map(game => {
+                    if (game.id === gameId) {
+                        const ts = game.topScorer || { mvps: [], threes: [] };
+                        return { ...game, topScorer: { ...ts, [type]: [...(ts[type] || []), { name: '', number: '', team: '', points: '' }] } };
+                    }
+                    return game;
+                }));
+            };
+
+            const updateHighlightPlayer = (gameId, type, index, field, value) => {
+                if (!isAdmin) return;
+                setGames(prev => prev.map(game => {
+                    if (game.id === gameId) {
+                        const ts = game.topScorer || { mvps: [], threes: [] };
+                        const list = [...(ts[type] || [])];
+                        if (list[index]) list[index] = { ...list[index], [field]: value };
+                        return { ...game, topScorer: { ...ts, [type]: list } };
+                    }
+                    return game;
+                }));
+            };
+
+            const removeHighlightPlayer = (gameId, type, index) => {
+                if (!isAdmin) return;
+                setGames(prev => prev.map(game => {
+                    if (game.id === gameId) {
+                        const ts = game.topScorer || { mvps: [], threes: [] };
+                        const list = [...(ts[type] || [])];
+                        list.splice(index, 1);
+                        return { ...game, topScorer: { ...ts, [type]: list } };
+                    }
+                    return game;
+                }));
+            };
+
             const saveGameData = async (gameId) => {
                 if (!isAdmin || !supabaseClient) return;
                 
@@ -621,7 +704,8 @@
                         id: gameId,
                         homescore: gameToSave.homeScore,
                         awayscore: gameToSave.awayScore,
-                        status: gameToSave.status
+                        status: gameToSave.status,
+                        topscorer: gameToSave.topScorer || null
                     });
                     
                     if (error) {
@@ -716,27 +800,95 @@
                 return true;
             });
 
+            const allKnownPlayers = useMemo(() => {
+                const names = new Set();
+                games.forEach(g => {
+                    const ts = g.topScorer || {};
+                    (ts.mvps || []).forEach(p => p.name && names.add(p.name.trim().toUpperCase()));
+                    (ts.threes || []).forEach(p => p.name && names.add(p.name.trim().toUpperCase()));
+                    // Legacy code support
+                    if (ts.name) names.add(ts.name.trim().toUpperCase());
+                });
+                return Array.from(names).sort();
+            }, [games]);
+
             const allStats = useMemo(() => {
                 const stats = {};
+                const mvpStatsMap = {}; 
+                const threesStatsMap = {};
                 let totalPoints = 0;
+                
                 games.filter(g => g.status === 'completed').forEach(g => {
                     totalPoints += g.homeScore + g.awayScore;
+                    
                     [ {t: g.homeTeam, s: g.homeScore, c: g.awayScore}, {t: g.awayTeam, s: g.awayScore, c: g.homeScore} ].forEach(side => {
                         const key = `${side.t}_${g.category}`;
                         if (!stats[key]) stats[key] = { name: side.t, vit: 0, cpo: 0, cco: 0, cat: g.category };
                         stats[key].cpo += side.s; stats[key].cco += side.c;
                         if (side.s > side.c) stats[key].vit++;
                     });
+
+                    // Agregação de Maiores Pontuadores (MVPs e Snipers)
+                    const processHighlight = (map, playerArr, legacyCompat) => {
+                        const arr = playerArr || (legacyCompat ? [legacyCompat] : []);
+                        arr.forEach(p => {
+                            if (!p || !p.name || !p.points) return;
+                            const pName = p.name.trim().toUpperCase();
+                            const pTeam = p.team || 'Desconhecido';
+                            const pKey = `${pName}_${pTeam}_${g.category}`;
+                            if (!map[pKey]) {
+                                map[pKey] = { name: pName, number: p.number, team: pTeam, cat: g.category, points: 0 };
+                            }
+                            map[pKey].points += (parseInt(p.points) || 0);
+                        });
+                    };
+
+                    const ts = g.topScorer || {};
+                    // Legacy code support se topScorer era objeto simples
+                    const legacyCompat = ts.name ? { name: ts.name, team: ts.team, number: ts.number, points: ts.points } : null;
+                    
+                    processHighlight(mvpStatsMap, ts.mvps, legacyCompat);
+                    processHighlight(threesStatsMap, ts.threes, null);
                 });
+
                 const sortedPts = Object.entries(stats).sort((a,b) => b[1].cpo - a[1].cpo);
                 const sortedVit = Object.entries(stats).sort((a,b) => b[1].vit - a[1].vit);
                 const sortedDef = Object.entries(stats).sort((a,b) => a[1].cco - b[1].cco);
                 
+                // Mapeamento de Ranking de Pontuadores
+                const allMvps = Object.values(mvpStatsMap);
+                const playersOverall = [...allMvps].sort((a, b) => b.points - a.points);
+                
+                const playersByCategory = {};
+                allMvps.forEach(p => {
+                    if (!playersByCategory[p.cat]) playersByCategory[p.cat] = [];
+                    playersByCategory[p.cat].push(p);
+                });
+                Object.keys(playersByCategory).forEach(cat => {
+                    playersByCategory[cat].sort((a, b) => b.points - a.points);
+                });
+
+                // Mapeamento Rank de Bolas de 3
+                const allThrees = Object.values(threesStatsMap);
+                const snipersOverall = [...allThrees].sort((a, b) => b.points - a.points);
+                const snipersByCategory = {};
+                allThrees.forEach(p => {
+                    if (!snipersByCategory[p.cat]) snipersByCategory[p.cat] = [];
+                    snipersByCategory[p.cat].push(p);
+                });
+                Object.keys(snipersByCategory).forEach(cat => {
+                    snipersByCategory[cat].sort((a, b) => b.points - a.points);
+                });
+
                 return {
                     totalPoints,
                     topScorers: sortedPts.slice(0, 5),
                     mostVictories: sortedVit.slice(0, 5),
-                    bestDefense: sortedDef.slice(0, 5)
+                    bestDefense: sortedDef.slice(0, 5),
+                    playersOverall,
+                    playersByCategory,
+                    snipersOverall,
+                    snipersByCategory
                 };
             }, [games]);
 
@@ -765,6 +917,9 @@
 
             return (
                 <>
+                    <datalist id="all-athletes">
+                        {allKnownPlayers.map(name => <option key={name} value={name} />)}
+                    </datalist>
                     {completedGames.length > 0 && (
                         <div className="ticker-wrap">
                             <div className="ticker">
@@ -790,13 +945,23 @@
                                     <p>Sistema de Acompanhamento de Resultados</p>
                                 </div>
                             </div>
-                            <div className="header-actions">
+                            <div className="header-actions" style={{display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap', justifyContent: 'flex-end'}}>
                                 <button className="icon-btn" onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')}>
                                     {theme === 'light' ? '🌙' : '☀️'}
                                 </button>
-                                <button className={`icon-btn ${isAdmin ? 'active' : ''}`} onClick={() => isAdmin ? setIsAdmin(false) : setShowAdminModal(true)}>
-                                    {isAdmin ? '🔓' : '🔐'}
-                                </button>
+                                
+                                {isAdmin ? (
+                                    <div style={{display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(0,0,0,0.2)', padding: '5px 15px', borderRadius: '20px', border: '1px solid var(--glass-border)'}}>
+                                        <span style={{fontSize: '0.85rem', color: 'var(--success)', fontWeight: 'bold'}}>Admin Logado</span>
+                                        <button className="btn btn-primary" style={{padding: '5px 15px', fontSize: '0.85rem', background: 'var(--danger)', color: 'white', border: 'none', cursor: 'pointer'}} onClick={handleAdminLogout}>Sair</button>
+                                    </div>
+                                ) : (
+                                    <div style={{display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap'}}>
+                                        <input type="email" placeholder="E-mail" value={adminEmail} onChange={e => setAdminEmail(e.target.value)} style={{padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'var(--future-dust)', color: 'var(--text-main)', width: '160px', fontSize: '0.85rem'}} />
+                                        <input type="password" placeholder="Senha" value={adminPassword} onChange={e => setAdminPassword(e.target.value)} style={{padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'var(--future-dust)', color: 'var(--text-main)', width: '110px', fontSize: '0.85rem'}} />
+                                        <button className="btn btn-primary" style={{padding: '10px 16px', fontSize: '0.85rem'}} onClick={handleAdminLogin}>Entrar</button>
+                                    </div>
+                                )}
                             </div>
                         </header>
 
@@ -852,7 +1017,9 @@
                                                             <tbody>
                                                                 {calculateStandings(cat, group).map(team => (
                                                                     <tr key={team.team}>
-                                                                        <td className="team-name">{team.team}</td>
+                                                                        <td className="team-name" style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                                                            <TeamLogo team={team.team} size={25}/> {team.team}
+                                                                        </td>
                                                                         <td className="stat-cell">
                                                                             <span 
                                                                                 style={{cursor: 'help', borderBottom: '1px dotted var(--golden-yellow)', paddingBottom: '2px'}}
@@ -902,11 +1069,11 @@
                                                     {catBracketGames.filter(g => g.group.includes('SF')).map(g => (
                                                         <div key={g.id} className="bracket-match">
                                                             <div className="bracket-team">
-                                                                <span>{g.homeTeam}</span>
+                                                                <span style={{display: 'flex', alignItems: 'center', gap: '6px'}}><TeamLogo team={g.homeTeam} size={20}/> {g.homeTeam}</span>
                                                                 <span className="bracket-score">{g.homeScore != null ? g.homeScore : '-'}</span>
                                                             </div>
                                                             <div className="bracket-team">
-                                                                <span>{g.awayTeam}</span>
+                                                                <span style={{display: 'flex', alignItems: 'center', gap: '6px'}}><TeamLogo team={g.awayTeam} size={20}/> {g.awayTeam}</span>
                                                                 <span className="bracket-score">{g.awayScore != null ? g.awayScore : '-'}</span>
                                                             </div>
                                                         </div>
@@ -917,11 +1084,11 @@
                                                     {catBracketGames.filter(g => g.group === 'FINAL').map(g => (
                                                         <div key={g.id} className="bracket-match" style={{borderColor: 'var(--golden-yellow)'}}>
                                                             <div className="bracket-team">
-                                                                <span>{g.homeTeam}</span>
+                                                                <span style={{display: 'flex', alignItems: 'center', gap: '6px'}}><TeamLogo team={g.homeTeam} size={20}/> {g.homeTeam}</span>
                                                                 <span className="bracket-score">{g.homeScore != null ? g.homeScore : '-'}</span>
                                                             </div>
                                                             <div className="bracket-team">
-                                                                <span>{g.awayTeam}</span>
+                                                                <span style={{display: 'flex', alignItems: 'center', gap: '6px'}}><TeamLogo team={g.awayTeam} size={20}/> {g.awayTeam}</span>
                                                                 <span className="bracket-score">{g.awayScore != null ? g.awayScore : '-'}</span>
                                                             </div>
                                                         </div>
@@ -987,16 +1154,65 @@
                                                     </div>
                                                 </div>
                                                 <div className="game-teams">
-                                                    <div className="team home">
+                                                    <div className="team home" style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                                                        <TeamLogo team={game.homeTeam} size={30} />
                                                         <span className="team-label">{game.homeTeam}</span>
-                                                        <input type="number" className="score-input" value={game.homeScore ?? ''} onChange={e => updateScoreLocal(game.id, 'home', e.target.value)} disabled={!isAdmin} placeholder="-" />
+                                                        <input type="number" className="score-input" value={game.homeScore ?? ''} onChange={e => updateScoreLocal(game.id, 'home', e.target.value)} disabled={!isAdmin} placeholder="-" style={{marginLeft: 'auto'}} />
                                                     </div>
-                                                    <span className="vs">X</span>
-                                                    <div className="team">
-                                                        <input type="number" className="score-input" value={game.awayScore ?? ''} onChange={e => updateScoreLocal(game.id, 'away', e.target.value)} disabled={!isAdmin} placeholder="-" />
+                                                    <span className="vs" style={{margin: '0 10px'}}>X</span>
+                                                    <div className="team away" style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                                                        <input type="number" className="score-input" value={game.awayScore ?? ''} onChange={e => updateScoreLocal(game.id, 'away', e.target.value)} disabled={!isAdmin} placeholder="-" style={{marginRight: 'auto'}} />
                                                         <span className="team-label">{game.awayTeam}</span>
+                                                        <TeamLogo team={game.awayTeam} size={30} />
                                                     </div>
                                                 </div>
+                                                {isAdmin && (game.status === 'completed' || game.status === 'live') && (
+                                                    <div style={{marginTop: '15px', paddingTop: '15px', borderTop: '1px dashed rgba(255,199,44,0.3)', display: 'grid', gap: '20px'}}>
+                                                        
+                                                        {/* MVP PANEL */}
+                                                        <div>
+                                                            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px'}}>
+                                                                <div style={{fontSize: '0.85rem', color: 'var(--golden-yellow)', fontWeight: 'bold'}}>⭐ Maiores Pontuadores (M.V.P)</div>
+                                                                <button onClick={() => addHighlightPlayer(game.id, 'mvps')} style={{background: 'rgba(255,199,44,0.2)', border: '1px solid var(--golden-yellow)', color: 'var(--golden-yellow)', borderRadius: '4px', padding: '2px 8px', fontSize: '0.75rem', cursor: 'pointer'}}>+ Adicionar Atleta</button>
+                                                            </div>
+                                                            {(game.topScorer?.mvps || []).map((p, idx) => (
+                                                                <div key={idx} style={{display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px'}}>
+                                                                    <input type="text" list="all-athletes" placeholder="Nome do Atleta" value={p.name} onChange={e => updateHighlightPlayer(game.id, 'mvps', idx, 'name', e.target.value.toUpperCase())} style={{flex: 2, padding: '8px', borderRadius: '4px', background: 'var(--future-dust-lighter)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', fontSize: '0.8rem'}} />
+                                                                    <input type="number" placeholder="Nº" value={p.number} onChange={e => updateHighlightPlayer(game.id, 'mvps', idx, 'number', e.target.value)} style={{flex: 1, maxWidth: '60px', padding: '8px', borderRadius: '4px', background: 'var(--future-dust-lighter)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', fontSize: '0.8rem'}} />
+                                                                    <select value={p.team} onChange={e => updateHighlightPlayer(game.id, 'mvps', idx, 'team', e.target.value)} style={{flex: 2, padding: '8px', borderRadius: '4px', background: 'var(--future-dust-lighter)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', fontSize: '0.8rem'}}>
+                                                                        <option value="">Clube</option>
+                                                                        <option value={game.homeTeam}>{game.homeTeam}</option>
+                                                                        <option value={game.awayTeam}>{game.awayTeam}</option>
+                                                                    </select>
+                                                                    <input type="number" placeholder="Pts" value={p.points} onChange={e => updateHighlightPlayer(game.id, 'mvps', idx, 'points', e.target.value)} style={{flex: 1, maxWidth: '60px', padding: '8px', borderRadius: '4px', background: 'var(--golden-yellow)', border: 'none', color: '#000', fontWeight: 'bold', fontSize: '0.8rem'}} />
+                                                                    <button onClick={() => removeHighlightPlayer(game.id, 'mvps', idx)} style={{background: 'var(--danger)', color: 'white', border: 'none', borderRadius: '4px', width: '30px', cursor: 'pointer'}}>X</button>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+
+                                                        {/* SNIPER PANEL */}
+                                                        <div>
+                                                            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px'}}>
+                                                                <div style={{fontSize: '0.85rem', color: '#38bdf8', fontWeight: 'bold'}}>🎯 Cestas de 3 Pontos (Snipers)</div>
+                                                                <button onClick={() => addHighlightPlayer(game.id, 'threes')} style={{background: 'rgba(56,189,248,0.2)', border: '1px solid #38bdf8', color: '#38bdf8', borderRadius: '4px', padding: '2px 8px', fontSize: '0.75rem', cursor: 'pointer'}}>+ Adicionar Sniper</button>
+                                                            </div>
+                                                            {(game.topScorer?.threes || []).map((p, idx) => (
+                                                                <div key={idx} style={{display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px'}}>
+                                                                    <input type="text" list="all-athletes" placeholder="Nome do Atleta" value={p.name} onChange={e => updateHighlightPlayer(game.id, 'threes', idx, 'name', e.target.value.toUpperCase())} style={{flex: 2, padding: '8px', borderRadius: '4px', background: 'var(--future-dust-lighter)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', fontSize: '0.8rem'}} />
+                                                                    <input type="number" placeholder="Nº" value={p.number} onChange={e => updateHighlightPlayer(game.id, 'threes', idx, 'number', e.target.value)} style={{flex: 1, maxWidth: '60px', padding: '8px', borderRadius: '4px', background: 'var(--future-dust-lighter)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', fontSize: '0.8rem'}} />
+                                                                    <select value={p.team} onChange={e => updateHighlightPlayer(game.id, 'threes', idx, 'team', e.target.value)} style={{flex: 2, padding: '8px', borderRadius: '4px', background: 'var(--future-dust-lighter)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', fontSize: '0.8rem'}}>
+                                                                        <option value="">Clube</option>
+                                                                        <option value={game.homeTeam}>{game.homeTeam}</option>
+                                                                        <option value={game.awayTeam}>{game.awayTeam}</option>
+                                                                    </select>
+                                                                    <input type="number" placeholder="🎯 Qtde" value={p.points} onChange={e => updateHighlightPlayer(game.id, 'threes', idx, 'points', e.target.value)} style={{flex: 1, maxWidth: '60px', padding: '8px', borderRadius: '4px', background: '#38bdf8', border: 'none', color: '#000', fontWeight: 'bold', fontSize: '0.8rem'}} />
+                                                                    <button onClick={() => removeHighlightPlayer(game.id, 'threes', idx)} style={{background: 'var(--danger)', color: 'white', border: 'none', borderRadius: '4px', width: '30px', cursor: 'pointer'}}>X</button>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+
+                                                    </div>
+                                                )}
                                                 {isAdmin && (
                                                     <div style={{marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                                                         <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
@@ -1034,6 +1250,98 @@
                                     </div>
                                 </div>
 
+                                <div style={{marginTop: '40px', marginBottom: '20px', borderBottom: '2px solid var(--golden-yellow)', paddingBottom: '10px'}}>
+                                    <h2 style={{fontSize: '2rem'}}>Estatísticas de Atletas</h2>
+                                </div>
+                                
+                                {allStats.playersOverall?.length > 0 ? (
+                                    <>
+                                        <div className="stats-bento" style={{marginBottom: '20px'}}>
+                                            <div className="stat-box glass-panel highlight" style={{flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: '20px', padding: '30px'}}>
+                                                <TeamLogo team={allStats.playersOverall[0].team} size={80} />
+                                                <div style={{textAlign: 'left'}}>
+                                                    <div style={{color: 'var(--golden-yellow)', fontSize: '0.9rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '5px'}}>Maior Pontuador da Competição</div>
+                                                    <div style={{fontSize: '2.5rem', fontFamily: 'Bebas Neue', lineHeight: 1}}>{allStats.playersOverall[0].name} <span style={{fontSize: '1rem', color: 'var(--text-muted)'}}>#{allStats.playersOverall[0].number}</span></div>
+                                                    <div style={{fontSize: '1rem', color: 'var(--text-main)', marginTop: '5px'}}>
+                                                        <span style={{background: 'var(--warriors-blue)', padding: '2px 8px', borderRadius: '4px', marginRight: '5px'}}>{allStats.playersOverall[0].team}</span> 
+                                                        <span style={{background: 'rgba(255,199,44,0.2)', color: 'var(--golden-yellow)', padding: '2px 8px', borderRadius: '4px'}}>{allStats.playersOverall[0].cat}</span>
+                                                    </div>
+                                                </div>
+                                                <div style={{fontSize: '3.5rem', fontFamily: 'Bebas Neue', color: 'var(--golden-yellow)', marginLeft: '30px', borderLeft: '1px solid rgba(255,255,255,0.2)', paddingLeft: '30px'}}>
+                                                    {allStats.playersOverall[0].points} <span style={{fontSize: '1.2rem'}}>Pts</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="bento-grid">
+                                            {/* Rank por Categoria */}
+                                            {Object.keys(allStats.playersByCategory).sort().map(cat => (
+                                                <div key={cat} className="card glass-panel" style={{flex: 1, minWidth: '300px'}}>
+                                                    <h2 style={{color: 'var(--golden-yellow)'}}>🏆 Rank MVP {cat}</h2>
+                                                    <table>
+                                                        <thead><tr><th style={{width: '30px'}}>#</th><th>Atleta / Clube</th><th className="stat-cell" style={{width: '60px'}}>PTs</th></tr></thead>
+                                                        <tbody>
+                                                            {allStats.playersByCategory[cat].slice(0, 10).map((p, idx) => (
+                                                                <tr key={idx}>
+                                                                    <td style={{fontWeight: 'bold', color: idx === 0 ? 'var(--golden-yellow)' : 'var(--text-muted)'}}>{idx + 1}º</td>
+                                                                    <td className="team-name" style={{display: 'flex', alignItems: 'center', gap: '10px', whiteSpace: 'normal', lineHeight: 1.2}}>
+                                                                        <TeamLogo team={p.team} size={35} />
+                                                                        <div style={{display: 'flex', flexDirection: 'column', gap: '2px'}}>
+                                                                            <span style={{fontSize: '1.1rem'}}>{p.name} <span style={{fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'Inter', fontWeight: 'normal'}}>#{p.number}</span></span>
+                                                                            <span style={{fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'Inter', fontWeight: 'normal'}}>{p.team}</span>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td className="stat-cell text-yellow" style={{fontSize: '1.3rem'}}>{p.points}</td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="card glass-panel" style={{textAlign: 'center', padding: '30px', color: 'var(--text-muted)', marginBottom: '30px'}}>
+                                        Ainda não há dados de pontuadores (M.V.P) lançados nos jogos encerrados.
+                                    </div>
+                                )}
+                                
+                                {allStats.snipersOverall?.length > 0 && (
+                                    <>
+                                        <div style={{marginTop: '10px', marginBottom: '20px', borderBottom: '2px solid #38bdf8', paddingBottom: '10px'}}>
+                                            <h2 style={{fontSize: '1.8rem', color: '#38bdf8'}}>🎯 Cestas de 3 Pontos (Snipers)</h2>
+                                        </div>
+                                        <div className="bento-grid">
+                                            {Object.keys(allStats.snipersByCategory).sort().map(cat => (
+                                                <div key={cat} className="card glass-panel" style={{flex: 1, minWidth: '300px', borderColor: 'rgba(56,189,248,0.2)'}}>
+                                                    <h2 style={{color: '#38bdf8'}}>🎯 Rank Snipers {cat}</h2>
+                                                    <table>
+                                                        <thead><tr><th style={{width: '30px'}}>#</th><th>Atleta / Clube</th><th className="stat-cell" style={{width: '60px'}}>Cestas</th></tr></thead>
+                                                        <tbody>
+                                                            {allStats.snipersByCategory[cat].slice(0, 10).map((p, idx) => (
+                                                                <tr key={idx}>
+                                                                    <td style={{fontWeight: 'bold', color: idx === 0 ? '#38bdf8' : 'var(--text-muted)'}}>{idx + 1}º</td>
+                                                                    <td className="team-name" style={{display: 'flex', alignItems: 'center', gap: '10px', whiteSpace: 'normal', lineHeight: 1.2}}>
+                                                                        <TeamLogo team={p.team} size={35} />
+                                                                        <div style={{display: 'flex', flexDirection: 'column', gap: '2px'}}>
+                                                                            <span style={{fontSize: '1.1rem'}}>{p.name} <span style={{fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'Inter', fontWeight: 'normal'}}>#{p.number}</span></span>
+                                                                            <span style={{fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'Inter', fontWeight: 'normal'}}>{p.team}</span>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td className="stat-cell text-yellow" style={{fontSize: '1.3rem', color: '#38bdf8'}}>{p.points}</td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+
+                                <div style={{marginTop: '40px', marginBottom: '20px', borderBottom: '2px solid var(--golden-yellow)', paddingBottom: '10px'}}>
+                                    <h2 style={{fontSize: '2rem'}}>Métricas de Equipes</h2>
+                                </div>
                                 <div className="bento-grid">
                                     <div className="card glass-panel">
                                         <h2>🔥 Melhores Ataques</h2>
@@ -1041,7 +1349,7 @@
                                             <thead><tr><th>Equipe</th><th className="stat-cell">Pontos</th></tr></thead>
                                             <tbody>
                                                 {allStats.topScorers.map(([key, data]) => (
-                                                    <tr key={key}><td className="team-name">{data.name} <small style={{color:'var(--text-muted)'}}>({data.cat})</small></td><td className="stat-cell text-yellow">{data.cpo}</td></tr>
+                                                    <tr key={key}><td className="team-name" style={{display:'flex', alignItems:'center', gap:'10px'}}><TeamLogo team={data.name} size={25}/> {data.name} <small style={{color:'var(--text-muted)'}}>({data.cat})</small></td><td className="stat-cell text-yellow">{data.cpo}</td></tr>
                                                 ))}
                                             </tbody>
                                         </table>
@@ -1052,7 +1360,7 @@
                                             <thead><tr><th>Equipe</th><th className="stat-cell">Sofridos</th></tr></thead>
                                             <tbody>
                                                 {allStats.bestDefense.map(([key, data]) => (
-                                                    <tr key={key}><td className="team-name">{data.name} <small style={{color:'var(--text-muted)'}}>({data.cat})</small></td><td className="stat-cell" style={{color:'var(--success)'}}>{data.cco}</td></tr>
+                                                    <tr key={key}><td className="team-name" style={{display:'flex', alignItems:'center', gap:'10px'}}><TeamLogo team={data.name} size={25}/> {data.name} <small style={{color:'var(--text-muted)'}}>({data.cat})</small></td><td className="stat-cell" style={{color:'var(--success)'}}>{data.cco}</td></tr>
                                                 ))}
                                             </tbody>
                                         </table>
@@ -1061,16 +1369,6 @@
                             </>
                         )}
 
-                        {showAdminModal && (
-                            <div className="modal-overlay" onClick={() => setShowAdminModal(false)}>
-                                <div className="modal glass-panel" onClick={e => e.stopPropagation()}>
-                                    <h2 style={{fontFamily: 'Bebas Neue', fontSize: '2rem'}}>Acesso Restrito</h2>
-                                    <input type="email" className="input" placeholder="E-mail do Administrador" value={adminEmail} onChange={e => setAdminEmail(e.target.value)} autoFocus style={{marginBottom: '0'}} />
-                                    <input type="password" className="input" placeholder="Senha" value={adminPassword} onChange={e => setAdminPassword(e.target.value)} />
-                                    <button className="btn btn-primary" style={{width: '100%'}} onClick={handleAdminLogin}>Autorizar</button>
-                                </div>
-                            </div>
-                        )}
 
                         <footer>
                             Desenvolvido por <a href="mailto:fawller@gmail.com">Fawller Dantas 2026</a>
