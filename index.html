@@ -289,13 +289,18 @@
         /* Tooltip na Tabela */
         .tooltip-container { position: relative; }
         .tooltip-content {
-            visibility: hidden; opacity: 0; background: var(--future-dust-darker); color: #fff;
-            text-align: left; border-radius: 8px; padding: 12px; position: absolute; z-index: 999;
-            bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-10px); width: max-content; min-width: 250px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.8); transition: all 0.3s; pointer-events: none;
-            border: 1px solid var(--golden-yellow); font-family: 'Inter', sans-serif; font-weight: 400;
+            display: none; background: #131420; color: #fff;
+            text-align: left; border-radius: 8px; padding: 16px; position: absolute; z-index: 99999;
+            bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); width: max-content; min-width: 280px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8); border: 2px solid var(--golden-yellow); 
+            font-family: 'Inter', sans-serif; font-weight: 400; font-size: 0.85rem;
         }
-        .tooltip-container:hover .tooltip-content { visibility: visible; opacity: 1; transform: translateX(-50%) translateY(-5px); }
+        /* Triângulo do Tooltip */
+        .tooltip-content::after {
+            content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+            border-width: 8px; border-style: solid; border-color: var(--golden-yellow) transparent transparent transparent;
+        }
+        .tooltip-container:hover .tooltip-content { display: block; }
 
         /* Games / Placares */
         .games-list { display: grid; gap: 16px; }
@@ -817,7 +822,7 @@
                                                                         <td className="stat-cell tooltip-container" style={{position: 'relative'}}>
                                                                             <span style={{cursor: 'help', borderBottom: '1px dotted var(--golden-yellow)'}}>{team.JOG}</span>
                                                                             <div className="tooltip-content">
-                                                                                <div style={{fontWeight: 'bold', marginBottom: '8px', borderBottom: '1px solid #ffffff33', paddingBottom: '4px'}}>Resultados: {team.team}</div>
+                                                                                <div style={{fontWeight: '900', marginBottom: '12px', borderBottom: '1px solid rgba(255,199,44,0.3)', paddingBottom: '8px', fontSize: '1rem'}}>📅 Desempenho: {team.team}</div>
                                                                                 {games.filter(g => g.category === cat && g.status === 'completed' && (g.homeTeam === team.team || g.awayTeam === team.team)).map(g => {
                                                                                     const isHome = g.homeTeam === team.team;
                                                                                     const opponent = isHome ? g.awayTeam : g.homeTeam;
@@ -825,9 +830,9 @@
                                                                                     const oppScore = isHome ? g.awayScore : g.homeScore;
                                                                                     const victory = myScore > oppScore;
                                                                                     return (
-                                                                                        <div key={g.id} style={{display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', margin: '6px 0', gap: '20px'}}>
-                                                                                            <span>{g.day} x {opponent}</span>
-                                                                                            <span style={{color: victory ? 'var(--success)' : 'var(--danger)', fontWeight: 'bold'}}>{myScore} - {oppScore} {victory ? '(V)' : '(D)'}</span>
+                                                                                        <div key={g.id} style={{display: 'flex', justifyContent: 'space-between', margin: '8px 0', gap: '24px', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.05)', padding: '6px', borderRadius: '6px'}}>
+                                                                                            <span style={{lineHeight: 1.2}}>Dia {g.day}<br/><span style={{fontSize: '0.75rem', opacity: 0.8}}>vs </span><b>{opponent}</b></span>
+                                                                                            <span style={{color: victory ? '#48bb78' : '#f56565', fontWeight: '900', fontSize: '1.05rem', backgroundColor: 'rgba(0,0,0,0.4)', padding: '4px 8px', borderRadius: '4px'}}>{myScore} - {oppScore} {victory ? '(V)' : '(D)'}</span>
                                                                                         </div>
                                                                                     );
                                                                                 })}
