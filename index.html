@@ -672,16 +672,36 @@
                     return stats;
                 });
                 
-                return standings.sort((a, b) => 
-                    b.PTS - a.PTS || 
-                    b.VIT - a.VIT || 
-                    b.SDO - a.SDO || 
-                    b.CPO - a.CPO
-                );
+                return standings.sort((a, b) => {
+                    // 1. Geral: Maior Pontuação
+                    if (b.PTS !== a.PTS) return b.PTS - a.PTS;
+                    
+                    // 2. Confronto Direto
+                    const headToHead = groupGames.find(g => 
+                        (g.homeTeam === a.team && g.awayTeam === b.team) || 
+                        (g.homeTeam === b.team && g.awayTeam === a.team)
+                    );
+                    
+                    if (headToHead && headToHead.status === 'completed') {
+                        const aScore = headToHead.homeTeam === a.team ? headToHead.homeScore : headToHead.awayScore;
+                        const bScore = headToHead.homeTeam === b.team ? headToHead.homeScore : headToHead.awayScore;
+                        if (aScore !== bScore) return bScore - aScore;
+                    }
+
+                    // 3. Saldo de Cestas (Average)
+                    if (b.SDO !== a.SDO) return b.SDO - a.SDO;
+                    
+                    // 4. Melhor Ataque
+                    return b.CPO - a.CPO;
+                });
             };
 
             const categoryGames = games.filter(g => selectedCategories.includes(g.category));
-            const completedGames = games.filter(g => g.status === 'completed' || g.status === 'live').reverse().slice(0, 5);
+            
+            // Descobre o dia ativo mais recente para zerar os placares do dia anterior no ticker
+            const activeMatchDays = [...new Set(games.filter(g => g.status === 'completed' || g.status === 'live').map(g => g.day))].sort((a, b) => a.localeCompare(b));
+            const latestActiveDay = activeMatchDays.length > 0 ? activeMatchDays[activeMatchDays.length - 1] : null;
+            const completedGames = games.filter(g => (g.status === 'completed' || g.status === 'live') && g.day === latestActiveDay).reverse().slice(0, 5);
             
             const availableDays = [...new Set(games.map(g => g.day))].sort();
             const availableVenues = [...new Set(games.map(g => g.venue))].sort();
@@ -1072,7 +1092,7 @@
                                     const victory = myScore > oppScore;
                                     return (
                                         <div key={g.id} style={{display: 'flex', justifyContent: 'space-between', margin: '8px 0', gap: '24px', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.05)', padding: '6px', borderRadius: '6px'}}>
-                                            <span style={{lineHeight: 1.2}}>Dia {g.day}<br/><span style={{fontSize: '0.75rem', opacity: 0.8}}>vs </span><b>{opponent}</b></span>
+                                            <span style={{lineHeight: 1.2}}>Dia {g.day} - {g.time}<br/><span style={{fontSize: '0.75rem', opacity: 0.8}}>vs </span><b>{opponent}</b></span>
                                             <span style={{color: victory ? '#48bb78' : '#f56565', fontWeight: '900', fontSize: '1.05rem', backgroundColor: 'rgba(0,0,0,0.4)', padding: '4px 8px', borderRadius: '4px'}}>{myScore} - {oppScore} {victory ? '(V)' : '(D)'}</span>
                                         </div>
                                     );
