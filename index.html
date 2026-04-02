@@ -10,6 +10,7 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -395,6 +396,17 @@
             border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.3);
             z-index: 2000; display: flex; align-items: center; gap: 12px; font-weight: 600;
         }
+        
+        .sync-badge {
+            position: fixed; bottom: 24px; left: 24px;
+            background: var(--glass-bg); backdrop-filter: blur(8px);
+            border: 1px solid var(--glass-border); color: var(--text-muted);
+            padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;
+            display: flex; align-items: center; gap: 8px; z-index: 1000;
+        }
+        .sync-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .sync-dot.online { background: var(--success); box-shadow: 0 0 8px var(--success); }
+        .sync-dot.offline { background: var(--danger); }
 
         .empty-state { text-align: center; padding: 40px; color: var(--text-muted); font-size: 1.1rem; }
 
@@ -412,6 +424,15 @@
     <div id="root"></div>
 
     <script type="text/babel">
+        // CONFIGURAÇÃO DO SUPABASE
+        const SUPABASE_URL = 'https://sgbrwoyygbycizvfwhkb.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_ktRyOlwOGl2JcuwkRzYx3A_zd9NIlKF';
+
+        let supabaseClient = null;
+        if (window.supabase) {
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        }
+
         const { useState, useEffect, useMemo } = React;
 
         const initialTournamentData = {
@@ -479,16 +500,44 @@
             const [theme, setTheme] = useState(() => localStorage.getItem('cni2026_theme') || 'dark');
             const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem('cni2026_admin') === 'true');
             const [showAdminModal, setShowAdminModal] = useState(false);
+            const [adminEmail, setAdminEmail] = useState('');
             const [adminPassword, setAdminPassword] = useState('');
             
             const [filterDay, setFilterDay] = useState('all');
             const [filterVenue, setFilterVenue] = useState('all');
             const [filterStatus, setFilterStatus] = useState('all');
 
-            const [games, setGames] = useState(() => {
-                const saved = localStorage.getItem('cni2026_games');
-                return saved ? JSON.parse(saved) : initialTournamentData.games;
-            });
+            const [games, setGames] = useState(initialTournamentData.games);
+            const [isSupabaseConnected, setIsSupabaseConnected] = useState(false);
+
+            // Fetch inicial dos dados
+            useEffect(() => {
+                const loadData = async () => {
+                    if (supabaseClient) {
+                        try {
+                            const { data, error } = await supabaseClient.from('games').select('*');
+                            if (!error && data) {
+                                setIsSupabaseConnected(true);
+                                // Mescla os placares do BD com os dados fixos
+                                const mergedGames = initialTournamentData.games.map(baseGame => {
+                                    const dbGame = data.find(dg => dg.id === baseGame.id);
+                                    return dbGame ? { ...baseGame, homeScore: dbGame.homeScore, awayScore: dbGame.awayScore } : baseGame;
+                                });
+                                setGames(mergedGames);
+                                return;
+                            }
+                        } catch (err) {
+                            console.error("Erro no Supabase:", err);
+                        }
+                    }
+                    
+                    // Fallback para LocalStorage se Supabase falhar
+                    const saved = localStorage.getItem('cni2026_games');
+                    if (saved) setGames(JSON.parse(saved));
+                };
+
+                loadData();
+            }, []);
 
             useEffect(() => {
                 setFilterDay('all');
@@ -505,26 +554,68 @@
                 localStorage.setItem('cni2026_games', JSON.stringify(games));
             }, [games]);
 
-            const handleAdminLogin = () => {
-                if (adminPassword === 'CNI2026') {
-                    setIsAdmin(true); setShowAdminModal(false); setAdminPassword('');
-                    showToast('Acesso de Administrador Liberado');
-                } else { showToast('Senha Incorreta'); }
+            const handleAdminLogin = async () => {
+                if (!supabaseClient) {
+                    showToast('Erro: Supabase não conectado.');
+                    return;
+                }
+                
+                showToast('Autenticando na nuvem...');
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: adminEmail,
+                    password: adminPassword
+                });
+
+                if (error) { 
+                    showToast('Senha ou E-mail Incorretos'); 
+                } else {
+                    setIsAdmin(true); 
+                    setShowAdminModal(false); 
+                    setAdminPassword('');
+                    localStorage.setItem('cni2026_admin', 'true');
+                    showToast('Acesso de Administrador Liberado na Nuvem');
+                }
             };
 
-            const updateScore = (gameId, team, score) => {
+            const updateScore = async (gameId, team, score) => {
                 if (!isAdmin) return;
+                
+                const numericScore = score === '' ? null : parseInt(score);
+                let newHomeScore, newAwayScore;
+                
                 setGames(prev => prev.map(game => {
                     if (game.id === gameId) {
-                        return { ...game, [team === 'home' ? 'homeScore' : 'awayScore']: parseInt(score) || 0 };
+                        newHomeScore = team === 'home' ? numericScore : (game.homeScore != null ? game.homeScore : null);
+                        newAwayScore = team === 'away' ? numericScore : (game.awayScore != null ? game.awayScore : null);
+                        return { ...game, homeScore: newHomeScore, awayScore: newAwayScore };
                     }
                     return game;
                 }));
+
+                if (supabaseClient) {
+                    try {
+                        const { error } = await supabaseClient.from('games').upsert({
+                            id: gameId,
+                            homeScore: newHomeScore,
+                            awayScore: newAwayScore
+                        });
+                        
+                        if (error) {
+                            console.error("Erro no Supabase:", error.message);
+                            if (error.code === '42501') {
+                                showToast('Acesso Negado: Permissão insuficiente (RLS configurado?).');
+                                setIsAdmin(false);
+                            }
+                        }
+                    } catch (error) {
+                        console.error("Erro de rede", error);
+                    }
+                }
             };
 
             const calculateStandings = (category, group) => {
                 const teamsInGroup = initialTournamentData.teams[category]?.[group] || [];
-                const groupGames = games.filter(g => g.category === category && g.group === group && g.homeScore !== undefined);
+                const groupGames = games.filter(g => g.category === category && g.group === group && g.homeScore != null);
                 
                 const standings = teamsInGroup.map(team => {
                     let stats = { team, JOG: 0, VIT: 0, DER: 0, PTS: 0, CPO: 0, CCO: 0, SDO: 0 };
@@ -562,7 +653,7 @@
             };
 
             const categoryGames = games.filter(g => g.category === activeTab);
-            const completedGames = games.filter(g => g.homeScore !== undefined).reverse().slice(0, 5);
+            const completedGames = games.filter(g => g.homeScore != null).reverse().slice(0, 5);
             const bracketGames = categoryGames.filter(g => g.phase === 'playoffs' || g.phase === 'finals');
             
             const availableDays = [...new Set(categoryGames.map(g => g.day))].sort();
@@ -571,15 +662,15 @@
             const filteredGames = categoryGames.filter(game => {
                 if (filterDay !== 'all' && game.day !== filterDay) return false;
                 if (filterVenue !== 'all' && game.venue !== filterVenue) return false;
-                if (filterStatus === 'completed' && game.homeScore === undefined) return false;
-                if (filterStatus === 'pending' && game.homeScore !== undefined) return false;
+                if (filterStatus === 'completed' && game.homeScore == null) return false;
+                if (filterStatus === 'pending' && game.homeScore != null) return false;
                 return true;
             });
 
             const allStats = useMemo(() => {
                 const stats = {};
                 let totalPoints = 0;
-                games.filter(g => g.homeScore !== undefined).forEach(g => {
+                games.filter(g => g.homeScore != null).forEach(g => {
                     totalPoints += g.homeScore + g.awayScore;
                     [ {t: g.homeTeam, s: g.homeScore, c: g.awayScore}, {t: g.awayTeam, s: g.awayScore, c: g.homeScore} ].forEach(side => {
                         if (!stats[side.t]) stats[side.t] = { vit: 0, cpo: 0, cco: 0, cat: g.category };
@@ -601,7 +692,7 @@
 
             const determineChampion = () => {
                 const finalMatch = bracketGames.find(g => g.group === 'FINAL');
-                if (finalMatch && finalMatch.homeScore !== undefined && finalMatch.awayScore !== undefined) {
+                if (finalMatch && finalMatch.homeScore != null && finalMatch.awayScore != null) {
                     if (finalMatch.homeScore > finalMatch.awayScore) return finalMatch.homeTeam;
                     if (finalMatch.awayScore > finalMatch.homeScore) return finalMatch.awayTeam;
                     return 'EMPATE'; 
@@ -719,11 +810,11 @@
                                             <div key={g.id} className="bracket-match">
                                                 <div className="bracket-team">
                                                     <span>{g.homeTeam}</span>
-                                                    <span className="bracket-score">{g.homeScore !== undefined ? g.homeScore : '-'}</span>
+                                                    <span className="bracket-score">{g.homeScore != null ? g.homeScore : '-'}</span>
                                                 </div>
                                                 <div className="bracket-team">
                                                     <span>{g.awayTeam}</span>
-                                                    <span className="bracket-score">{g.awayScore !== undefined ? g.awayScore : '-'}</span>
+                                                    <span className="bracket-score">{g.awayScore != null ? g.awayScore : '-'}</span>
                                                 </div>
                                             </div>
                                         ))}
@@ -735,11 +826,11 @@
                                             <div key={g.id} className="bracket-match" style={{borderColor: 'var(--golden-yellow)'}}>
                                                 <div className="bracket-team">
                                                     <span>{g.homeTeam}</span>
-                                                    <span className="bracket-score">{g.homeScore !== undefined ? g.homeScore : '-'}</span>
+                                                    <span className="bracket-score">{g.homeScore != null ? g.homeScore : '-'}</span>
                                                 </div>
                                                 <div className="bracket-team">
                                                     <span>{g.awayTeam}</span>
-                                                    <span className="bracket-score">{g.awayScore !== undefined ? g.awayScore : '-'}</span>
+                                                    <span className="bracket-score">{g.awayScore != null ? g.awayScore : '-'}</span>
                                                 </div>
                                             </div>
                                         ))}
@@ -783,7 +874,7 @@
                                 ) : (
                                     <div className="games-list">
                                         {filteredGames.map(game => (
-                                            <div key={game.id} className={`game-card glass-panel ${game.homeScore !== undefined ? 'completed' : ''}`}>
+                                            <div key={game.id} className={`game-card glass-panel ${game.homeScore != null ? 'completed' : ''}`}>
                                                 <div className="game-header">
                                                     <span className="badge badge-primary">{game.day} - {game.time} | {game.venue}</span>
                                                     <span className="badge badge-info">{game.phase === 'groups' ? `CHAVE ${game.group}` : game.group}</span>
@@ -818,7 +909,7 @@
                                         <div className="stat-label">Mais Vitórias</div>
                                     </div>
                                     <div className="stat-box glass-panel">
-                                        <div className="stat-value">{games.filter(g => g.homeScore !== undefined).length}</div>
+                                        <div className="stat-value">{games.filter(g => g.homeScore != null).length}</div>
                                         <div className="stat-label">Jogos Concluídos</div>
                                     </div>
                                 </div>
@@ -854,7 +945,8 @@
                             <div className="modal-overlay" onClick={() => setShowAdminModal(false)}>
                                 <div className="modal glass-panel" onClick={e => e.stopPropagation()}>
                                     <h2 style={{fontFamily: 'Bebas Neue', fontSize: '2rem'}}>Acesso Restrito</h2>
-                                    <input type="password" className="input" placeholder="Digite a Senha" value={adminPassword} onChange={e => setAdminPassword(e.target.value)} autoFocus />
+                                    <input type="email" className="input" placeholder="E-mail do Administrador" value={adminEmail} onChange={e => setAdminEmail(e.target.value)} autoFocus style={{marginBottom: '0'}} />
+                                    <input type="password" className="input" placeholder="Senha" value={adminPassword} onChange={e => setAdminPassword(e.target.value)} />
                                     <button className="btn btn-primary" style={{width: '100%'}} onClick={handleAdminLogin}>Autorizar</button>
                                 </div>
                             </div>
@@ -863,6 +955,11 @@
                         <footer>
                             Desenvolvido por <a href="mailto:fawller@gmail.com">Fawller Dantas 2026</a>
                         </footer>
+                        
+                        <div className="sync-badge">
+                            <div className={`sync-dot ${isSupabaseConnected ? 'online' : 'offline'}`}></div>
+                            {isSupabaseConnected ? 'Nuvem Conectada' : 'Modo Offline (Apenas Local)'}
+                        </div>
                     </div>
                 </>
             );
