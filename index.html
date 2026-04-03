@@ -919,61 +919,10 @@
                     if (sf2Game) { sf2Game.homeTeam = sf2Home; sf2Game.awayTeam = sf2Away; }
                     
                     let finalHome = 'VENC. SF1', finalAway = 'VENC. SF2';
-                    let thirdHome = 'PERD. SF1', thirdAway = 'PERD. SF2';
-
-                    if (sf1Game?.status === 'completed') {
-                        finalHome = sf1Game.homeScore > sf1Game.awayScore ? sf1Home : sf1Away;
-                        thirdHome = sf1Game.homeScore > sf1Game.awayScore ? sf1Away : sf1Home;
-                    }
-                    if (sf2Game?.status === 'completed') {
-                        finalAway = sf2Game.homeScore > sf2Game.awayScore ? sf2Home : sf2Away;
-                        thirdAway = sf2Game.homeScore > sf2Game.awayScore ? sf2Away : sf2Home;
-                    }
+                    if (sf1Game?.status === 'completed') finalHome = sf1Game.homeScore > sf1Game.awayScore ? sf1Home : sf1Away;
+                    if (sf2Game?.status === 'completed') finalAway = sf2Game.homeScore > sf2Game.awayScore ? sf2Home : sf2Away;
                     
                     if (finalGame) { finalGame.homeTeam = finalHome; finalGame.awayTeam = finalAway; }
-                    
-                    const thirdGame = cloned.find(g => g.category === cat && g.group === '3º/4º');
-                    if (thirdGame) { thirdGame.homeTeam = thirdHome; thirdGame.awayTeam = thirdAway; }
-
-                    if (allGroupsCompleted) {
-                        let allTeams = [];
-                        ['A', 'B', 'C', 'D'].forEach(group => {
-                            if (initialTournamentData.teams[cat]?.[group]) {
-                                const st = calculateStandings(cat, group);
-                                st.forEach((teamStat, idx) => {
-                                    allTeams.push({ ...teamStat, groupPos: idx });
-                                });
-                            }
-                        });
-                        
-                        allTeams.sort((a, b) => {
-                            if (a.groupPos !== b.groupPos) return a.groupPos - b.groupPos;
-                            const ptsA = a.JOG > 0 ? a.PTS / a.JOG : 0;
-                            const ptsB = b.JOG > 0 ? b.PTS / b.JOG : 0;
-                            if (ptsA !== ptsB) return ptsB - ptsA;
-                            const sdoA = a.JOG > 0 ? a.SDO / a.JOG : 0;
-                            const sdoB = b.JOG > 0 ? b.SDO / b.JOG : 0;
-                            if (sdoA !== sdoB) return sdoB - sdoA;
-                            const cpoA = a.JOG > 0 ? a.CPO / a.JOG : 0;
-                            const cpoB = b.JOG > 0 ? b.CPO / b.JOG : 0;
-                            return cpoB - cpoA;
-                        });
-
-                        cloned.forEach(game => {
-                            if (game.category === cat && game.phase === 'classification') {
-                                const homeMatch = game.homeTeam.match(/^(\d+)º RANKING$/);
-                                if (homeMatch) {
-                                    const rank = parseInt(homeMatch[1], 10);
-                                    if (allTeams[rank - 1]) game.homeTeam = allTeams[rank - 1].team;
-                                }
-                                const awayMatch = game.awayTeam.match(/^(\d+)º RANKING$/);
-                                if (awayMatch) {
-                                    const rank = parseInt(awayMatch[1], 10);
-                                    if (allTeams[rank - 1]) game.awayTeam = allTeams[rank - 1].team;
-                                }
-                            }
-                        });
-                    }
                  });
                  return cloned;
             }, [games]);
@@ -1298,127 +1247,81 @@
                                                         </table>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
-                            )}
+                                            ))}
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        )}
 
                         {view === 'bracket' && (
                             <div>
                                 {selectedCategories.map(cat => {
                                     const catBracketGames = dynamicGames.filter(g => g.category === cat && (g.phase === 'playoffs' || g.phase === 'finals'));
-                                        const classificationGames = dynamicGames.filter(g => g.category === cat && g.phase === 'classification');
-                                        const classifGroups = [...new Set(classificationGames.map(g => g.group))].sort((a,b) => b.localeCompare(a));
-                                        const finalMatch = catBracketGames.find(g => g.group === 'FINAL');
-                                        let champ = 'A DEFINIR';
-                                        if (finalMatch && finalMatch.status === 'completed' && finalMatch.homeScore != null && finalMatch.awayScore != null) {
-                                            if (finalMatch.homeScore > finalMatch.awayScore) champ = finalMatch.homeTeam;
-                                            else if (finalMatch.awayScore > finalMatch.homeScore) champ = finalMatch.awayTeam;
-                                            else champ = 'EMPATE';
-                                        }
-                                        const thirdGames = catBracketGames.filter(g => g.group === '3º/4º');
-
-                                        return (
-                                            <div key={cat} style={{ marginBottom: '40px' }}>
-                                                <div className="card glass-panel" style={{ overflowX: 'auto', marginBottom: '20px' }}>
-                                                    <h2>🏆 Fase Final - {cat}</h2>
-                                                    <div className="bracket-container">
-                                                        <div className="bracket-round">
-                                                            <h3 style={{color: 'var(--text-muted)', textAlign: 'center'}}>Semi-Finais</h3>
-                                                            {catBracketGames.filter(g => g.group.includes('SF')).map(g => (
-                                                                <div key={g.id} className="bracket-match">
-                                                                    <div className="bracket-team">
-                                                                        <span style={{display: 'flex', alignItems: 'center', gap: '6px'}}><TeamLogo team={g.homeTeam} size={20}/> {g.homeTeam}</span>
-                                                                        <span className="bracket-score">{g.homeScore != null ? g.homeScore : '-'}</span>
-                                                                    </div>
-                                                                    <div className="bracket-team">
-                                                                        <span style={{display: 'flex', alignItems: 'center', gap: '6px'}}><TeamLogo team={g.awayTeam} size={20}/> {g.awayTeam}</span>
-                                                                        <span className="bracket-score">{g.awayScore != null ? g.awayScore : '-'}</span>
-                                                                    </div>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                        <div className="bracket-round">
-                                                            <h3 style={{color: 'var(--golden-yellow)', textAlign: 'center'}}>Grande Final</h3>
-                                                            {catBracketGames.filter(g => g.group === 'FINAL').map(g => (
-                                                                <div key={g.id} className="bracket-match" style={{borderColor: 'var(--golden-yellow)'}}>
-                                                                    <div className="bracket-team">
-                                                                        <span style={{display: 'flex', alignItems: 'center', gap: '6px'}}><TeamLogo team={g.homeTeam} size={20}/> {g.homeTeam}</span>
-                                                                        <span className="bracket-score">{g.homeScore != null ? g.homeScore : '-'}</span>
-                                                                    </div>
-                                                                    <div className="bracket-team">
-                                                                        <span style={{display: 'flex', alignItems: 'center', gap: '6px'}}><TeamLogo team={g.awayTeam} size={20}/> {g.awayTeam}</span>
-                                                                        <span className="bracket-score">{g.awayScore != null ? g.awayScore : '-'}</span>
-                                                                    </div>
-                                                                </div>
-                                                            ))}
-                                                            {thirdGames.length > 0 && (
-                                                                <React.Fragment>
-                                                                    <h3 style={{color: 'var(--text-muted)', textAlign: 'center', marginTop: '20px'}}>3º e 4º Lugar</h3>
-                                                                    {thirdGames.map(g => (
-                                                                        <div key={g.id} className="bracket-match">
-                                                                            <div className="bracket-team">
-                                                                                <span style={{display: 'flex', alignItems: 'center', gap: '6px'}}><TeamLogo team={g.homeTeam} size={20}/> {g.homeTeam}</span>
-                                                                                <span className="bracket-score">{g.homeScore != null ? g.homeScore : '-'}</span>
-                                                                            </div>
-                                                                            <div className="bracket-team">
-                                                                                <span style={{display: 'flex', alignItems: 'center', gap: '6px'}}><TeamLogo team={g.awayTeam} size={20}/> {g.awayTeam}</span>
-                                                                                <span className="bracket-score">{g.awayScore != null ? g.awayScore : '-'}</span>
-                                                                            </div>
-                                                                        </div>
-                                                                    ))}
-                                                                </React.Fragment>
-                                                            )}
-                                                        </div>
-                                                        <div className="bracket-round">
-                                                            <h3 style={{color: 'var(--success)', textAlign: 'center'}}>Campeão</h3>
-                                                            <div className="bracket-match champion-box" style={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}>
-                                                                {champ !== 'A DEFINIR' && champ !== 'EMPATE' ? (
-                                                                    <React.Fragment>
-                                                                        <div style={{marginBottom: '10px'}}><TeamLogo team={champ} size={70}/></div>
-                                                                        <div className="champion-name" style={{fontSize: '1.4rem'}}>{champ}</div>
-                                                                    </React.Fragment>
-                                                                ) : (
-                                                                    <React.Fragment>
-                                                                        <div className="champion-icon">🏆</div>
-                                                                        <div className="champion-name">{champ}</div>
-                                                                    </React.Fragment>
-                                                                )}
+                                    const finalMatch = catBracketGames.find(g => g.group === 'FINAL');
+                                    let champ = 'A DEFINIR';
+                                    if (finalMatch && finalMatch.status === 'completed' && finalMatch.homeScore != null && finalMatch.awayScore != null) {
+                                        if (finalMatch.homeScore > finalMatch.awayScore) champ = finalMatch.homeTeam;
+                                        else if (finalMatch.awayScore > finalMatch.homeScore) champ = finalMatch.awayTeam;
+                                        else champ = 'EMPATE';
+                                    }
+                                    
+                                    return (
+                                        <div key={cat} className="card glass-panel" style={{ overflowX: 'auto', marginBottom: '20px' }}>
+                                            <h2>🏆 Fase Final - {cat}</h2>
+                                            <div className="bracket-container">
+                                                <div className="bracket-round">
+                                                    <h3 style={{color: 'var(--text-muted)', textAlign: 'center'}}>Semi-Finais</h3>
+                                                    {catBracketGames.filter(g => g.group.includes('SF')).map(g => (
+                                                        <div key={g.id} className="bracket-match">
+                                                            <div className="bracket-team">
+                                                                <span style={{display: 'flex', alignItems: 'center', gap: '6px'}}><TeamLogo team={g.homeTeam} size={20}/> {g.homeTeam}</span>
+                                                                <span className="bracket-score">{g.homeScore != null ? g.homeScore : '-'}</span>
+                                                            </div>
+                                                            <div className="bracket-team">
+                                                                <span style={{display: 'flex', alignItems: 'center', gap: '6px'}}><TeamLogo team={g.awayTeam} size={20}/> {g.awayTeam}</span>
+                                                                <span className="bracket-score">{g.awayScore != null ? g.awayScore : '-'}</span>
                                                             </div>
                                                         </div>
+                                                    ))}
+                                                </div>
+                                                <div className="bracket-round">
+                                                    <h3 style={{color: 'var(--golden-yellow)', textAlign: 'center'}}>Grande Final</h3>
+                                                    {catBracketGames.filter(g => g.group === 'FINAL').map(g => (
+                                                        <div key={g.id} className="bracket-match" style={{borderColor: 'var(--golden-yellow)'}}>
+                                                            <div className="bracket-team">
+                                                                <span style={{display: 'flex', alignItems: 'center', gap: '6px'}}><TeamLogo team={g.homeTeam} size={20}/> {g.homeTeam}</span>
+                                                                <span className="bracket-score">{g.homeScore != null ? g.homeScore : '-'}</span>
+                                                            </div>
+                                                            <div className="bracket-team">
+                                                                <span style={{display: 'flex', alignItems: 'center', gap: '6px'}}><TeamLogo team={g.awayTeam} size={20}/> {g.awayTeam}</span>
+                                                                <span className="bracket-score">{g.awayScore != null ? g.awayScore : '-'}</span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <div className="bracket-round">
+                                                    <h3 style={{color: 'var(--success)', textAlign: 'center'}}>Campeão</h3>
+                                                    <div className="bracket-match champion-box" style={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}>
+                                                        {champ !== 'A DEFINIR' && champ !== 'EMPATE' ? (
+                                                            <>
+                                                                <div style={{marginBottom: '10px'}}><TeamLogo team={champ} size={70}/></div>
+                                                                <div className="champion-name" style={{fontSize: '1.4rem'}}>{champ}</div>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <div className="champion-icon">🏆</div>
+                                                                <div className="champion-name">{champ}</div>
+                                                            </>
+                                                        )}
                                                     </div>
                                                 </div>
-
-                                                {classifGroups.length > 0 && (
-                                                    <div className="card glass-panel" style={{ overflowX: 'auto', marginBottom: '20px' }}>
-                                                        <h2>🏅 Disputas de Colocação - {cat}</h2>
-                                                        <div className="bracket-container" style={{justifyContent: 'center', flexWrap: 'wrap'}}>
-                                                            {classifGroups.map(grp => (
-                                                                <div key={grp} className="bracket-round" style={{minWidth: '220px'}}>
-                                                                    <h3 style={{color: 'var(--text-muted)', textAlign: 'center'}}>{grp}</h3>
-                                                                    {classificationGames.filter(g => g.group === grp).map(g => (
-                                                                        <div key={g.id} className="bracket-match">
-                                                                            <div className="bracket-team">
-                                                                                <span style={{display: 'flex', alignItems: 'center', gap: '6px'}}><TeamLogo team={g.homeTeam} size={20}/> {g.homeTeam}</span>
-                                                                                <span className="bracket-score">{g.homeScore != null ? g.homeScore : '-'}</span>
-                                                                            </div>
-                                                                            <div className="bracket-team">
-                                                                                <span style={{display: 'flex', alignItems: 'center', gap: '6px'}}><TeamLogo team={g.awayTeam} size={20}/> {g.awayTeam}</span>
-                                                                                <span className="bracket-score">{g.awayScore != null ? g.awayScore : '-'}</span>
-                                                                            </div>
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                )}
                                             </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
 
                         {view === 'games' && (
                             <>
