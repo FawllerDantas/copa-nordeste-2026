@@ -538,7 +538,7 @@
                     <img 
                         src={getLogoPath(team)} 
                         alt={team} 
-                        style={{width: size, height: size, objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.4))'}} 
+                        style={{width: size, height: size, objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.4))', transform: (team && team.toUpperCase().includes('DRG')) ? 'scale(0.8)' : 'none'}} 
                         onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} 
                     />
                     <div style={{display: 'none', width: size, height: size, borderRadius: '50%', background: 'var(--warriors-blue)', border: '1px solid var(--golden-yellow)', color: 'var(--golden-yellow)', justifyContent: 'center', alignItems: 'center', fontSize: size * 0.4, fontWeight: 'bold'}}>
