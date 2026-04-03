@@ -314,8 +314,8 @@
         .badge-completed { background: var(--success); color: white; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
-        .game-teams { display: flex; justify-content: center; gap: 30px; align-items: center; flex-wrap: wrap; margin: 20px 0; }
-        .team { display: flex; align-items: center; gap: 16px; flex: 1; }
+        .game-teams { display: flex; justify-content: center; gap: 20px; align-items: center; flex-wrap: wrap; margin: 20px 0; }
+        .team { display: flex; align-items: center; gap: 16px; }
         .team.home { justify-content: flex-end; text-align: right; }
         .team.away { justify-content: flex-start; text-align: left; }
         .team-label { font-size: 1.4rem; color: var(--text-main); }
@@ -517,7 +517,7 @@
             
             const name = teamName.toUpperCase();
             if (name.includes('AEROCLUBE')) return './assets/logos/aeroclube-rn.png';
-            if (name.includes('FENIX')) return './assets/logos/fenix-rn.jpg';
+            if (name.includes('FENIX')) return './assets/logos/fenix-rn.png';
             if (name.includes('AADB')) return './assets/logos/aadb-pe.png';
             if (name.includes('BASQ')) return './assets/logos/basquete-pb.png';
             if (name.includes('BNB')) return './assets/logos/bnb-pe.png';
@@ -538,7 +538,7 @@
                     <img 
                         src={getLogoPath(team)} 
                         alt={team} 
-                        style={{width: size, height: size, objectFit: 'contain', background: 'rgba(255,255,255,0.1)', borderRadius: '50%', padding: '2px'}} 
+                        style={{width: size, height: size, objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.4))'}} 
                         onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} 
                     />
                     <div style={{display: 'none', width: size, height: size, borderRadius: '50%', background: 'var(--warriors-blue)', border: '1px solid var(--golden-yellow)', color: 'var(--golden-yellow)', justifyContent: 'center', alignItems: 'center', fontSize: size * 0.4, fontWeight: 'bold'}}>
