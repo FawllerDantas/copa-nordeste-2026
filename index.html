@@ -578,6 +578,19 @@
             ]
         };
 
+        // Mapeamento estático: id do jogo → rótulo de posição (ex: "Jogo pelo 5º e 7º Lugar")
+        const classificationPositionLabels = {};
+        initialTournamentData.games.forEach(g => {
+            if (g.phase === 'classification') {
+                const hm = g.homeTeam.match(/(\d+)º RANKING/);
+                const am = g.awayTeam.match(/(\d+)º RANKING/);
+                if (hm && am) {
+                    const pos = [parseInt(hm[1]), parseInt(am[1])].sort((a, b) => a - b);
+                    classificationPositionLabels[g.id] = `Disputa pelo ${pos[0]}º Lugar`;
+                }
+            }
+        });
+
         const showToast = (message) => {
             const toast = document.createElement('div');
             toast.className = `toast glass-panel`;
@@ -591,7 +604,7 @@
             
             const name = teamName.toUpperCase();
             if (name.includes('AEROCLUBE')) return './assets/logos/aeroclube-rn.png';
-            if (name.includes('FENIX')) return './assets/logos/fenix-rn.png';
+            if (name.includes('FENIX') || name.includes('FÊNIX')) return './assets/logos/fenix-rn.png';
             if (name.includes('AADB')) return './assets/logos/aadb-pe.png';
             if (name.includes('BASQ')) return './assets/logos/basquete-pb.png';
             if (name.includes('BNB')) return './assets/logos/bnb-pe.png';
@@ -875,54 +888,100 @@
                  ['U13', 'U15', 'U17'].forEach(cat => {
                     const groupGames = cloned.filter(g => g.category === cat && g.phase === 'groups');
                     const allGroupsCompleted = groupGames.length > 0 && groupGames.every(g => g.status === 'completed');
-                    
+
                     let sf1Home = '1º A', sf1Away = '2º B';
                     let sf2Home = '1º B', sf2Away = '2º A';
-                    
+
                     if (cat === 'U15') { sf1Away = 'MELHOR 2º'; sf2Away = '1º C'; }
                     if (cat === 'U17') { sf1Away = '1º D'; sf2Away = '1º C'; }
+
+                    let nonQualifiers = [];
 
                     if (allGroupsCompleted) {
                         const stdA = calculateStandings(cat, 'A');
                         const stdB = calculateStandings(cat, 'B');
-                        
+
                         if (cat === 'U13') {
                             sf1Home = stdA[0]?.team || sf1Home; sf1Away = stdB[1]?.team || sf1Away;
                             sf2Home = stdB[0]?.team || sf2Home; sf2Away = stdA[1]?.team || sf2Away;
+                            // Não classificados: 3º e 4º do grupo A, 3º do grupo B
+                            if (stdA[2]) nonQualifiers.push({team: stdA[2].team, pos: 3, PTS: stdA[2].PTS, SDO: stdA[2].SDO, CPO: stdA[2].CPO});
+                            if (stdA[3]) nonQualifiers.push({team: stdA[3].team, pos: 4, PTS: stdA[3].PTS, SDO: stdA[3].SDO, CPO: stdA[3].CPO});
+                            if (stdB[2]) nonQualifiers.push({team: stdB[2].team, pos: 3, PTS: stdB[2].PTS, SDO: stdB[2].SDO, CPO: stdB[2].CPO});
                         } else if (cat === 'U15') {
                             const stdC = calculateStandings(cat, 'C');
-                            sf1Home = stdA[0]?.team || sf1Home; 
-                            sf2Home = stdB[0]?.team || sf2Home; 
+                            sf1Home = stdA[0]?.team || sf1Home;
+                            sf2Home = stdB[0]?.team || sf2Home;
                             sf2Away = stdC[0]?.team || sf2Away;
-                            
+
                             const seconds = [stdA[1], stdB[1], stdC[1]].filter(Boolean);
                             seconds.sort((a, b) => {
                                 if (b.PTS !== a.PTS) return b.PTS - a.PTS;
                                 if (b.SDO !== a.SDO) return b.SDO - a.SDO;
                                 return b.CPO - a.CPO;
                             });
-                            
                             sf1Away = seconds[0]?.team || sf1Away;
+                            // Não classificados: 2os não-melhores + todos os 3os
+                            seconds.slice(1).forEach(t => { if (t) nonQualifiers.push({team: t.team, pos: 2, PTS: t.PTS, SDO: t.SDO, CPO: t.CPO}); });
+                            if (stdA[2]) nonQualifiers.push({team: stdA[2].team, pos: 3, PTS: stdA[2].PTS, SDO: stdA[2].SDO, CPO: stdA[2].CPO});
+                            if (stdB[2]) nonQualifiers.push({team: stdB[2].team, pos: 3, PTS: stdB[2].PTS, SDO: stdB[2].SDO, CPO: stdB[2].CPO});
+                            if (stdC[2]) nonQualifiers.push({team: stdC[2].team, pos: 3, PTS: stdC[2].PTS, SDO: stdC[2].SDO, CPO: stdC[2].CPO});
                         } else if (cat === 'U17') {
                             const stdC = calculateStandings(cat, 'C');
                             const stdD = calculateStandings(cat, 'D');
                             sf1Home = stdA[0]?.team || sf1Home; sf1Away = stdD[0]?.team || sf1Away;
                             sf2Home = stdB[0]?.team || sf2Home; sf2Away = stdC[0]?.team || sf2Away;
+                            // Não classificados: 2os-4os do A, 2os-3os de B/C/D
+                            if (stdA[1]) nonQualifiers.push({team: stdA[1].team, pos: 2, PTS: stdA[1].PTS, SDO: stdA[1].SDO, CPO: stdA[1].CPO});
+                            if (stdA[2]) nonQualifiers.push({team: stdA[2].team, pos: 3, PTS: stdA[2].PTS, SDO: stdA[2].SDO, CPO: stdA[2].CPO});
+                            if (stdA[3]) nonQualifiers.push({team: stdA[3].team, pos: 4, PTS: stdA[3].PTS, SDO: stdA[3].SDO, CPO: stdA[3].CPO});
+                            if (stdB[1]) nonQualifiers.push({team: stdB[1].team, pos: 2, PTS: stdB[1].PTS, SDO: stdB[1].SDO, CPO: stdB[1].CPO});
+                            if (stdB[2]) nonQualifiers.push({team: stdB[2].team, pos: 3, PTS: stdB[2].PTS, SDO: stdB[2].SDO, CPO: stdB[2].CPO});
+                            if (stdC[1]) nonQualifiers.push({team: stdC[1].team, pos: 2, PTS: stdC[1].PTS, SDO: stdC[1].SDO, CPO: stdC[1].CPO});
+                            if (stdC[2]) nonQualifiers.push({team: stdC[2].team, pos: 3, PTS: stdC[2].PTS, SDO: stdC[2].SDO, CPO: stdC[2].CPO});
+                            if (stdD[1]) nonQualifiers.push({team: stdD[1].team, pos: 2, PTS: stdD[1].PTS, SDO: stdD[1].SDO, CPO: stdD[1].CPO});
+                            if (stdD[2]) nonQualifiers.push({team: stdD[2].team, pos: 3, PTS: stdD[2].PTS, SDO: stdD[2].SDO, CPO: stdD[2].CPO});
                         }
+                        // Ordena não-classificados: posição no grupo → PTS → SDO → CPO
+                        nonQualifiers.sort((a, b) => {
+                            if (a.pos !== b.pos) return a.pos - b.pos;
+                            if (b.PTS !== a.PTS) return b.PTS - a.PTS;
+                            if (b.SDO !== a.SDO) return b.SDO - a.SDO;
+                            return b.CPO - a.CPO;
+                        });
                     }
-                    
+
                     const sf1Game = cloned.find(g => g.category === cat && g.group === 'SF1');
                     const sf2Game = cloned.find(g => g.category === cat && g.group === 'SF2');
                     const finalGame = cloned.find(g => g.category === cat && g.group === 'FINAL');
-                    
+                    const thirdGame = cloned.find(g => g.category === cat && g.group === '3º/4º');
+
                     if (sf1Game) { sf1Game.homeTeam = sf1Home; sf1Game.awayTeam = sf1Away; }
                     if (sf2Game) { sf2Game.homeTeam = sf2Home; sf2Game.awayTeam = sf2Away; }
-                    
+
                     let finalHome = 'VENC. SF1', finalAway = 'VENC. SF2';
-                    if (sf1Game?.status === 'completed') finalHome = sf1Game.homeScore > sf1Game.awayScore ? sf1Home : sf1Away;
-                    if (sf2Game?.status === 'completed') finalAway = sf2Game.homeScore > sf2Game.awayScore ? sf2Home : sf2Away;
-                    
+                    let thirdHome = 'PERD. SF1', thirdAway = 'PERD. SF2';
+                    if (sf1Game?.status === 'completed') {
+                        finalHome = sf1Game.homeScore > sf1Game.awayScore ? sf1Home : sf1Away;
+                        thirdHome = sf1Game.homeScore > sf1Game.awayScore ? sf1Away : sf1Home;
+                    }
+                    if (sf2Game?.status === 'completed') {
+                        finalAway = sf2Game.homeScore > sf2Game.awayScore ? sf2Home : sf2Away;
+                        thirdAway = sf2Game.homeScore > sf2Game.awayScore ? sf2Away : sf2Home;
+                    }
+
                     if (finalGame) { finalGame.homeTeam = finalHome; finalGame.awayTeam = finalAway; }
+                    if (thirdGame) { thirdGame.homeTeam = thirdHome; thirdGame.awayTeam = thirdAway; }
+
+                    // Resolve os nomes nas disputas de classificação (5º em diante)
+                    if (nonQualifiers.length > 0) {
+                        const rankMap = {};
+                        nonQualifiers.forEach((nq, idx) => { rankMap[`${idx + 5}º RANKING`] = nq.team; });
+                        cloned.filter(g => g.category === cat && g.phase === 'classification').forEach(g => {
+                            if (rankMap[g.homeTeam]) g.homeTeam = rankMap[g.homeTeam];
+                            if (rankMap[g.awayTeam]) g.awayTeam = rankMap[g.awayTeam];
+                        });
+                    }
                  });
                  return cloned;
             }, [games]);
@@ -1257,66 +1316,119 @@
                         {view === 'bracket' && (
                             <div>
                                 {selectedCategories.map(cat => {
-                                    const catBracketGames = dynamicGames.filter(g => g.category === cat && (g.phase === 'playoffs' || g.phase === 'finals'));
-                                    const finalMatch = catBracketGames.find(g => g.group === 'FINAL');
+                                    const allCatGames = dynamicGames.filter(g => g.category === cat);
+                                    const finalMatch = allCatGames.find(g => g.group === 'FINAL');
                                     let champ = 'A DEFINIR';
                                     if (finalMatch && finalMatch.status === 'completed' && finalMatch.homeScore != null && finalMatch.awayScore != null) {
                                         if (finalMatch.homeScore > finalMatch.awayScore) champ = finalMatch.homeTeam;
                                         else if (finalMatch.awayScore > finalMatch.homeScore) champ = finalMatch.awayTeam;
                                         else champ = 'EMPATE';
                                     }
-                                    
+
+                                    const sfGames = allCatGames.filter(g => g.group && g.group.includes('SF'));
+                                    const finalGames = allCatGames.filter(g => g.group === 'FINAL');
+                                    const thirdGames = allCatGames.filter(g => g.group === '3º/4º');
+                                    const classGames = allCatGames.filter(g => g.phase === 'classification');
+
+                                    // Agrupa disputas de classificação pelo campo group
+                                    const classGroups = {};
+                                    classGames.forEach(g => {
+                                        if (!classGroups[g.group]) classGroups[g.group] = [];
+                                        classGroups[g.group].push(g);
+                                    });
+                                    const classGroupKeys = Object.keys(classGroups).sort();
+
+                                    const matchInfo = (g) => (
+                                        <div style={{fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '7px', borderTop: '1px solid var(--glass-border)', paddingTop: '6px', textAlign: 'center', lineHeight: 1.6}}>
+                                            📅 {g.day} &nbsp;⏰ {g.time} &nbsp;📍 {g.venue}
+                                        </div>
+                                    );
+
+                                    const matchCard = (g, extraStyle) => (
+                                        <div key={g.id} className="bracket-match" style={extraStyle}>
+                                            {classificationPositionLabels[g.id] && (
+                                                <div style={{fontSize: '0.68rem', background: 'rgba(255,199,44,0.12)', color: 'var(--golden-yellow)', padding: '3px 8px', borderRadius: '6px', marginBottom: '8px', textAlign: 'center', fontWeight: '700', letterSpacing: '0.5px'}}>
+                                                    {classificationPositionLabels[g.id]}
+                                                </div>
+                                            )}
+                                            <div className="bracket-team">
+                                                <span style={{display: 'flex', alignItems: 'center', gap: '6px'}}><TeamLogo team={g.homeTeam} size={20}/> {g.homeTeam}</span>
+                                                <span className="bracket-score">{g.homeScore != null ? g.homeScore : '-'}</span>
+                                            </div>
+                                            <div className="bracket-team">
+                                                <span style={{display: 'flex', alignItems: 'center', gap: '6px'}}><TeamLogo team={g.awayTeam} size={20}/> {g.awayTeam}</span>
+                                                <span className="bracket-score">{g.awayScore != null ? g.awayScore : '-'}</span>
+                                            </div>
+                                            {matchInfo(g)}
+                                        </div>
+                                    );
+
                                     return (
-                                        <div key={cat} className="card glass-panel" style={{ overflowX: 'auto', marginBottom: '20px' }}>
-                                            <h2>🏆 Fase Final - {cat}</h2>
-                                            <div className="bracket-container">
-                                                <div className="bracket-round">
-                                                    <h3 style={{color: 'var(--text-muted)', textAlign: 'center'}}>Semi-Finais</h3>
-                                                    {catBracketGames.filter(g => g.group.includes('SF')).map(g => (
-                                                        <div key={g.id} className="bracket-match">
-                                                            <div className="bracket-team">
-                                                                <span style={{display: 'flex', alignItems: 'center', gap: '6px'}}><TeamLogo team={g.homeTeam} size={20}/> {g.homeTeam}</span>
-                                                                <span className="bracket-score">{g.homeScore != null ? g.homeScore : '-'}</span>
-                                                            </div>
-                                                            <div className="bracket-team">
-                                                                <span style={{display: 'flex', alignItems: 'center', gap: '6px'}}><TeamLogo team={g.awayTeam} size={20}/> {g.awayTeam}</span>
-                                                                <span className="bracket-score">{g.awayScore != null ? g.awayScore : '-'}</span>
-                                                            </div>
+                                        <div key={cat}>
+                                            {/* ── Bracket principal: Semi-Finais → Final → Campeão ── */}
+                                            <div className="card glass-panel" style={{ overflowX: 'auto', marginBottom: '20px' }}>
+                                                <h2>🏆 Fase Final — {cat}</h2>
+                                                <div className="bracket-container">
+                                                    <div className="bracket-round">
+                                                        <h3 style={{color: 'var(--text-muted)', textAlign: 'center', marginBottom: '10px'}}>Semi-Finais</h3>
+                                                        {sfGames.map(g => matchCard(g, {}))}
+                                                    </div>
+                                                    <div className="bracket-round">
+                                                        <h3 style={{color: 'var(--golden-yellow)', textAlign: 'center', marginBottom: '10px'}}>Grande Final</h3>
+                                                        {finalGames.map(g => matchCard(g, {borderColor: 'var(--golden-yellow)'}))}
+                                                    </div>
+                                                    <div className="bracket-round">
+                                                        <h3 style={{color: 'var(--success)', textAlign: 'center', marginBottom: '10px'}}>Campeão</h3>
+                                                        <div className="bracket-match champion-box" style={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}>
+                                                            {champ !== 'A DEFINIR' && champ !== 'EMPATE' ? (
+                                                                <>
+                                                                    <div style={{marginBottom: '10px'}}><TeamLogo team={champ} size={70}/></div>
+                                                                    <div className="champion-name" style={{fontSize: '1.4rem'}}>{champ}</div>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <div className="champion-icon">🏆</div>
+                                                                    <div className="champion-name">{champ}</div>
+                                                                </>
+                                                            )}
                                                         </div>
-                                                    ))}
-                                                </div>
-                                                <div className="bracket-round">
-                                                    <h3 style={{color: 'var(--golden-yellow)', textAlign: 'center'}}>Grande Final</h3>
-                                                    {catBracketGames.filter(g => g.group === 'FINAL').map(g => (
-                                                        <div key={g.id} className="bracket-match" style={{borderColor: 'var(--golden-yellow)'}}>
-                                                            <div className="bracket-team">
-                                                                <span style={{display: 'flex', alignItems: 'center', gap: '6px'}}><TeamLogo team={g.homeTeam} size={20}/> {g.homeTeam}</span>
-                                                                <span className="bracket-score">{g.homeScore != null ? g.homeScore : '-'}</span>
-                                                            </div>
-                                                            <div className="bracket-team">
-                                                                <span style={{display: 'flex', alignItems: 'center', gap: '6px'}}><TeamLogo team={g.awayTeam} size={20}/> {g.awayTeam}</span>
-                                                                <span className="bracket-score">{g.awayScore != null ? g.awayScore : '-'}</span>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                                <div className="bracket-round">
-                                                    <h3 style={{color: 'var(--success)', textAlign: 'center'}}>Campeão</h3>
-                                                    <div className="bracket-match champion-box" style={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}>
-                                                        {champ !== 'A DEFINIR' && champ !== 'EMPATE' ? (
-                                                            <>
-                                                                <div style={{marginBottom: '10px'}}><TeamLogo team={champ} size={70}/></div>
-                                                                <div className="champion-name" style={{fontSize: '1.4rem'}}>{champ}</div>
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <div className="champion-icon">🏆</div>
-                                                                <div className="champion-name">{champ}</div>
-                                                            </>
-                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            {/* ── Disputa 3º/4º Lugar ── */}
+                                            {thirdGames.length > 0 && (
+                                                <div className="card glass-panel" style={{ marginBottom: '20px' }}>
+                                                    <h2>🥉 Disputa 3º/4º Lugar — {cat}</h2>
+                                                    <div style={{display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', paddingTop: '8px'}}>
+                                                        {thirdGames.map(g => matchCard(g, {borderColor: '#cd7f32', minWidth: '240px'}))}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* ── Disputas de Classificação (5º em diante) ── */}
+                                            {classGroupKeys.length > 0 && (
+                                                <div className="card glass-panel" style={{ marginBottom: '20px' }}>
+                                                    <h2>📊 Disputas de Classificação — {cat}</h2>
+                                                    {classGroupKeys.map(groupKey => {
+                                                        const m = groupKey.match(/(\d+º)\/(\d+º)/);
+                                                        const disputeLabel = m ? `Disputa pelo ${m[1]} ao ${m[2]} Lugar` : groupKey;
+                                                        return (
+                                                        <div key={groupKey} style={{marginBottom: '24px'}}>
+                                                            <h3 style={{color: 'var(--golden-yellow)', marginBottom: '4px', fontSize: '1.2rem', letterSpacing: '1px'}}>
+                                                                {disputeLabel}
+                                                            </h3>
+                                                            <p style={{color: 'var(--text-muted)', fontSize: '0.78rem', marginBottom: '12px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '8px'}}>
+                                                                Jogos que definem a classificação final neste intervalo de colocações
+                                                            </p>
+                                                            <div style={{display: 'flex', gap: '14px', flexWrap: 'wrap'}}>
+                                                                {classGroups[groupKey].map(g => matchCard(g, {minWidth: '220px'}))}
+                                                            </div>
+                                                        </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
                                         </div>
                                     );
                                 })}
@@ -1365,6 +1477,11 @@
                                                         {isAdmin && <span className="badge badge-primary">{game.time}</span>}
                                                         <span className="badge badge-primary">{game.day} | {game.venue}</span>
                                                         <span className="badge badge-info">{game.phase === 'groups' ? `CHAVE ${game.group}` : game.group}</span>
+                                                        {classificationPositionLabels[game.id] && (
+                                                            <span className="badge" style={{background: 'rgba(255,199,44,0.12)', color: 'var(--golden-yellow)', border: '1px solid rgba(255,199,44,0.3)'}}>
+                                                                {classificationPositionLabels[game.id]}
+                                                            </span>
+                                                        )}
                                                         <span className="badge" style={{background: 'var(--golden-yellow)', color: 'black'}}>{game.category}</span>
                                                     </div>
                                                 </div>
