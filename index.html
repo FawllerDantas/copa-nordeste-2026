@@ -1057,10 +1057,11 @@
                     <div className="container">
                         <header className="header glass-panel">
                             <div className="logo-section">
-                                <div className="logo-cni">
-                                    <img src="./assets/logos/logo-cni2026.png?v=1" alt="CNI 2026 Logo" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextSibling.style.display = 'flex'; }} />
-                                    <span style={{display: 'none', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center'}}>🏀</span>
-                                </div>
+                                <a href="#" onClick={(e) => { e.preventDefault(); setView('about'); window.scrollTo({top: 0, behavior: 'smooth'}); }} style={{textDecoration: 'none'}}>
+                                    <div className="logo-cni">
+                                        <img src="./assets/logos/logo-cni2026.png" alt="CNI 2026 Logo" style={{width: '100%', height: '100%', objectFit: 'contain'}} />
+                                    </div>
+                                </a>
                                 <div className="header-text">
                                     <h1>Copa Nordeste Interclubes '26</h1>
                                     <p>Sistema de Acompanhamento de Resultados</p>
