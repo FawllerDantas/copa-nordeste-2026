@@ -1322,32 +1322,20 @@
                                     </div>
                                 ) : (
                                     <div className="games-list">
-                                        {filteredGames.map(game => {
-                                            let isGameCurrent = false;
-                                            if (game.status !== 'completed' && game.day && game.time) {
-                                                const [day, month] = game.day.split('/');
-                                                const [hour, min] = game.time.split('H');
-                                                if (day && month && hour && min) {
-                                                    const gameTime = new Date(2026, parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(min));
-                                                    const now = new Date();
-                                                    const diffMs = now.getTime() - gameTime.getTime();
-                                                    // Live from 10 mins before to 90 mins after schedule
-                                                    if (diffMs >= -600000 && diffMs <= 5400000) {
-                                                        isGameCurrent = true;
-                                                    }
-                                                }
-                                            }
-                                            
-                                            // Fallback to manual 'live' status if defined or mathematically current
-                                            const isLive = game.status === 'live' || isGameCurrent;
-
+                                        {filteredGames.sort((a, b) => {
+                                            const dayA = a.day.split('/').reverse().join('');
+                                            const dayB = b.day.split('/').reverse().join('');
+                                            if (dayA !== dayB) return dayA.localeCompare(dayB);
+                                            return (a.time || '').localeCompare(b.time || '');
+                                        }).map(game => {
+                                            const isStreamVenue = game.venue.includes('INSTITUTO BRASIL') || game.venue.includes('JORGE TAVARES');
                                             return (
                                             <div key={game.id} className={`game-card glass-panel ${game.status === 'completed' ? 'completed' : ''}`}>
                                                 <div className="game-header">
                                                     <div style={{display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap'}}>
-                                                        {!isAdmin && isLive && <span className="badge badge-live">🔴 AO VIVO</span>}
+                                                        {!isAdmin && game.status === 'live' && <span className="badge badge-live">🔴 AO VIVO</span>}
                                                         {!isAdmin && game.status === 'completed' && <span className="badge badge-completed">ENCERRADO</span>}
-                                                        {!isAdmin && game.status === 'pending' && !isLive && <span className="badge badge-primary">{game.time}</span>}
+                                                        {!isAdmin && game.status === 'pending' && <span className="badge badge-primary">{game.time}</span>}
                                                         
                                                         {isAdmin && <span className="badge badge-primary">{game.time}</span>}
                                                         <span className="badge badge-primary">{game.day} | {game.venue}</span>
@@ -1355,55 +1343,47 @@
                                                         <span className="badge" style={{background: 'var(--golden-yellow)', color: 'black'}}>{game.category}</span>
                                                     </div>
                                                     
-                                                    {(() => {
-                                                        const isStreamVenue = game.venue.includes('INSTITUTO BRASIL') || game.venue.includes('JORGE TAVARES');
-                                                        
-                                                        if (isStreamVenue) {
-                                                            if (!isLive && game.status !== 'completed') {
-                                                                return (
-                                                                    <div style={{display: 'flex', marginLeft: 'auto'}}>
-                                                                        <span className="badge" style={{background: 'rgba(255,255,255,0.1)', color: 'var(--text-muted)', border: '1px solid var(--glass-border)', display: 'flex', gap: '6px', alignItems: 'center'}}>
-                                                                            <img src="./assets/logos/gametimetv.png" alt="TV" style={{height: '14px', objectFit: 'contain'}} onError={(e) => { e.target.style.display = 'none'; }} /> 
-                                                                            Agendada
-                                                                        </span>
-                                                                    </div>
-                                                                );
-                                                            } else if (isLive) {
-                                                                return (
-                                                                    <div 
-                                                                        style={{position: 'relative', display: 'flex', marginLeft: 'auto'}} 
-                                                                        onMouseEnter={() => setActiveStream(game.id)} 
-                                                                        onMouseLeave={() => setActiveStream(null)} 
-                                                                        onClick={() => setActiveStream(activeStream === game.id ? null : game.id)}
-                                                                    >
-                                                                        <div className="stream-dot">▶️</div>
-                                                                        
-                                                                        {activeStream === game.id && (
-                                                                            <div className="stream-popup" onClick={() => window.open('https://www.youtube.com/@GameTimeTV_25', '_blank')}>
-                                                                                <div style={{paddingBottom: '10px', marginBottom: '10px', borderBottom: '1px solid rgba(220, 38, 38, 0.2)', fontWeight: 'bold', color: '#dc2626'}}>
-                                                                                    🔴 ASSISTIR GAME TIME TV
-                                                                                </div>
-                                                                                <div style={{width: '100%', aspectRatio: '16/9', pointerEvents: 'none'}}>
-                                                                                    <iframe 
-                                                                                        width="100%" 
-                                                                                        height="100%" 
-                                                                                        src={"https://www.youtube.com/embed/live_stream?channel=" + YOUTUBE_CHANNEL_ID + "&autoplay=1&mute=1"} 
-                                                                                        frameBorder="0" 
-                                                                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                                                                        allowFullScreen
-                                                                                    ></iframe>
-                                                                                </div>
-                                                                                <div style={{paddingTop: '10px', textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-muted)'}}>
-                                                                                    Clique para abrir o canal no YouTube
-                                                                                </div>
+                                                    {isStreamVenue && (
+                                                        <div style={{display: 'flex', marginLeft: 'auto'}}>
+                                                            {game.status === 'pending' && (
+                                                                <span className="badge" style={{background: 'rgba(255,255,255,0.1)', color: 'var(--text-muted)', border: '1px solid var(--glass-border)', display: 'flex', gap: '6px', alignItems: 'center'}}>
+                                                                    <img src="./assets/logos/gametimetv.png" alt="TV" style={{height: '14px', objectFit: 'contain'}} onError={(e) => { e.target.style.display = 'none'; }} /> 
+                                                                    Agendada
+                                                                </span>
+                                                            )}
+                                                            {game.status === 'live' && (
+                                                                <div 
+                                                                    style={{position: 'relative', display: 'flex'}} 
+                                                                    onMouseEnter={() => setActiveStream(game.id)} 
+                                                                    onMouseLeave={() => setActiveStream(null)} 
+                                                                    onClick={() => setActiveStream(activeStream === game.id ? null : game.id)}
+                                                                >
+                                                                    <span className="stream-dot">▶️</span>
+                                                                    
+                                                                    {activeStream === game.id && (
+                                                                        <div className="stream-popup" onClick={() => window.open('https://www.youtube.com/@GameTimeTV_25', '_blank')}>
+                                                                            <div style={{paddingBottom: '10px', marginBottom: '10px', borderBottom: '1px solid rgba(220, 38, 38, 0.2)', fontWeight: 'bold', color: '#dc2626'}}>
+                                                                                🔴 ASSISTIR GAME TIME TV
                                                                             </div>
-                                                                        )}
-                                                                    </div>
-                                                                );
-                                                            }
-                                                        }
-                                                        return null;
-                                                    })()}
+                                                                            <div style={{width: '100%', aspectRatio: '16/9', pointerEvents: 'none'}}>
+                                                                                <iframe 
+                                                                                    width="100%" 
+                                                                                    height="100%" 
+                                                                                    src={"https://www.youtube.com/embed/live_stream?channel=" + YOUTUBE_CHANNEL_ID + "&autoplay=1&mute=1"} 
+                                                                                    frameBorder="0" 
+                                                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                                                                    allowFullScreen
+                                                                                ></iframe>
+                                                                            </div>
+                                                                            <div style={{paddingTop: '10px', textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-muted)'}}>
+                                                                                Clique para abrir o canal no YouTube
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div className="game-teams">
                                                     <div className="team home" style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
@@ -1698,22 +1678,26 @@
                         )}
 
 
-                        <footer style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', paddingTop: '40px', paddingBottom: '20px'}}>
+                        <footer style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', paddingTop: '40px', paddingBottom: '20px'}}>
                             <div style={{display: 'flex', gap: '20px', justifyContent: 'center', flexWrap: 'wrap'}}>
-                                <a target="_blank" href="https://instagram.com/copanordesteinterclubes" style={{display: 'inline-flex', alignItems: 'center', gap: '10px', background: 'rgba(255,255,255,0.1)', padding: '8px 16px', borderRadius: '12px', color: 'var(--text-main)', textDecoration: 'none', fontWeight: 'bold', transition: 'all 0.3s'}} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'} onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}>
-                                    @copanordesteinterclubes
+                                <a target="_blank" href="https://www.instagram.com/copanordesteinterclubes/" style={{background: 'var(--golden-yellow)', color: '#000', fontWeight: '700', borderRadius: '12px', padding: '10px 20px', display: 'flex', gap: '8px', alignItems: 'center', textDecoration: 'none'}}>
+                                    <img src="./assets/logos/logocni-ig.png" style={{height: '24px', objectFit: 'contain'}} onError={(e) => { e.target.style.display = 'none'; }}/> Siga a @copanordesteinterclubes
                                 </a>
-                                <a target="_blank" href="https://instagram.com/desportivoriogrande" style={{display: 'inline-flex', alignItems: 'center', gap: '10px', background: 'rgba(255,255,255,0.1)', padding: '8px 16px', borderRadius: '12px', color: 'var(--text-main)', textDecoration: 'none', fontWeight: 'bold', transition: 'all 0.3s'}} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'} onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}>
-                                    @desportivoriogrande
-                                </a>
-                            </div>
-                            <div style={{display: 'flex', justifyContent: 'center', marginBottom: '20px'}}>
-                                <a target="_blank" href="https://www.youtube.com/@GameTimeTV_25" style={{display: 'inline-flex', alignItems: 'center', gap: '10px', background: 'rgba(255,255,255,0.1)', padding: '8px 16px', borderRadius: '12px', color: 'var(--text-main)', textDecoration: 'none', fontWeight: 'bold', transition: 'all 0.3s'}} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'} onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}>
-                                    Assista ao Vivo pelo Canal <img src="./assets/logos/gametimetv.png" alt="Game Time TV" style={{height: '20px', objectFit: 'contain', margin: '0 8px'}} onError={(e) => { e.target.style.display = 'none'; }} /> Game Time TV
+                                <a target="_blank" href="https://www.instagram.com/desportivoriogrande?igsh=eWZ3OHo0ZzM0bGww" style={{background: 'var(--warriors-blue)', color: '#fff', fontWeight: '700', borderRadius: '12px', padding: '10px 20px', display: 'flex', gap: '8px', alignItems: 'center', textDecoration: 'none'}}>
+                                    <img src="./assets/logos/logodrg-ig.png" style={{height: '24px', objectFit: 'contain'}} onError={(e) => { e.target.style.display = 'none'; }}/> Organização: Desportivo Rio Grande
                                 </a>
                             </div>
+                            
+                            <div style={{fontSize: '1.1rem', fontWeight: '600', color: 'var(--text-main)'}}>
+                                Assista ao Vivo pelo Canal
+                            </div>
+                            
+                            <a target="_blank" href="https://www.youtube.com/@GameTimeTV_25" style={{background: '#131420', color: 'var(--golden-yellow)', border: '1px solid var(--golden-yellow)', fontWeight: '700', borderRadius: '12px', padding: '10px 20px', display: 'flex', gap: '8px', alignItems: 'center', textDecoration: 'none', marginBottom: '20px'}}>
+                                <img src="./assets/logos/gametimetv.png" style={{height: '24px', objectFit: 'contain'}} onError={(e) => { e.target.style.display = 'none'; }}/> Game Time TV
+                            </a>
+                            
                             <div>
-                                Desenvolvido por <a href="mailto:fawller@gmail.com">Fawller Dantas (2026)</a>
+                                Desenvolvido por <a href="mailto:fawller@gmail.com" style={{color: 'var(--golden-yellow)', textDecoration: 'none'}}>Fawller Dantas (2026)</a>
                             </div>
                         </footer>
                         
