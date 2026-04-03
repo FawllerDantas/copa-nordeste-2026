@@ -53,6 +53,7 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
 
         body {
             font-family: 'Inter', sans-serif;
@@ -140,12 +141,16 @@
         
         .logo-cni {
             width: 60px; height: 60px;
-            background: linear-gradient(135deg, var(--warriors-blue) 0%, #102652 100%);
+            background: transparent;
             border-radius: 16px;
             display: flex; align-items: center; justify-content: center;
             font-size: 28px; color: var(--golden-yellow);
             box-shadow: 0 0 20px rgba(29, 66, 138, 0.5);
             border: 1px solid rgba(255, 199, 44, 0.3);
+            filter: drop-shadow(0 4px 12px rgba(255, 199, 44, 0.4));
+        }
+        .logo-cni img {
+            width: 100%; height: 100%; object-fit: contain;
         }
 
         .header-text h1 { font-size: 2.2rem; color: var(--text-main); margin-bottom: 4px; }
@@ -428,6 +433,34 @@
 
         .empty-state { text-align: center; padding: 40px; color: var(--text-muted); font-size: 1.1rem; }
 
+        .back-to-top {
+            position: fixed;
+            bottom: 80px;
+            right: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--golden-yellow);
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            cursor: pointer;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            border: none;
+        }
+        .back-to-top.visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
         @media (max-width: 768px) {
             .game-teams { grid-template-columns: 1fr; gap: 10px; }
             .team.home { justify-content: flex-start; }
@@ -549,7 +582,7 @@
         };
 
         function App() {
-            const [view, setView] = useState('games');
+            const [view, setView] = useState('about');
             const [selectedCategories, setSelectedCategories] = useState(['U13']);
             const [theme, setTheme] = useState(() => localStorage.getItem('cni2026_theme') || 'dark');
             const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem('cni2026_admin') === 'true');
@@ -561,6 +594,21 @@
             const [filterVenue, setFilterVenue] = useState('all');
             const [filterStatus, setFilterStatus] = useState('all');
             const [filterTeam, setFilterTeam] = useState('all');
+            const [showScroll, setShowScroll] = useState(false);
+
+            useEffect(() => {
+                const handleScroll = () => {
+                    if (window.scrollY > 300) {
+                        setShowScroll(true);
+                    } else {
+                        setShowScroll(false);
+                    }
+                };
+                window.addEventListener('scroll', handleScroll);
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, []);
+
+            const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
             const [games, setGames] = useState(initialTournamentData.games.map(g => ({...g, status: 'pending'})));
             const [isSupabaseConnected, setIsSupabaseConnected] = useState(false);
@@ -1009,7 +1057,10 @@
                     <div className="container">
                         <header className="header glass-panel">
                             <div className="logo-section">
-                                <div className="logo-cni">🏀</div>
+                                <div className="logo-cni">
+                                    <img src="./assets/logos/logo-cni2026.png" alt="CNI 2026 Logo" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
+                                    <span style={{display: 'none'}}>🏀</span>
+                                </div>
                                 <div className="header-text">
                                     <h1>Copa Nordeste Interclubes '26</h1>
                                     <p>Sistema de Acompanhamento de Resultados</p>
@@ -1035,19 +1086,22 @@
                             </div>
                         </header>
 
-                        <div className="tabs-container">
-                            <button className="tab" onClick={() => toggleCategory('all')} style={{fontWeight: 900}}>
-                                Todas
-                            </button>
-                            {['U13', 'U15', 'U17'].map(cat => (
-                                <button key={cat} className={`tab ${selectedCategories.includes(cat) ? 'active' : ''}`} onClick={() => toggleCategory(cat)}>
-                                    {cat}
+                        {view !== 'about' && (
+                            <div className="tabs-container">
+                                <button className="tab" onClick={() => toggleCategory('all')} style={{fontWeight: 900}}>
+                                    Todas
                                 </button>
-                            ))}
-                        </div>
+                                {['U13', 'U15', 'U17'].map(cat => (
+                                    <button key={cat} className={`tab ${selectedCategories.includes(cat) ? 'active' : ''}`} onClick={() => toggleCategory(cat)}>
+                                        {cat}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
 
                         <div className="tabs-container">
                             {[
+                                { id: 'about', label: 'O Evento' },
                                 { id: 'standings', label: 'Classificação' },
                                 { id: 'bracket', label: 'Chaveamento' },
                                 { id: 'games', label: 'Jogos' },
@@ -1058,6 +1112,46 @@
                                 </button>
                             ))}
                         </div>
+
+                        {view === 'about' && (
+                            <div className="about-section">
+                                <div className="card glass-panel" style={{marginBottom: '24px', textAlign: 'center'}}>
+                                    <span className="badge" style={{background: 'var(--golden-yellow)', color: 'black', marginBottom: '16px'}}>11ª Edição</span>
+                                    <h2 style={{justifyContent: 'center', fontSize: '2.5rem', color: 'var(--golden-yellow)', borderBottom: 'none'}}>Copa Nordeste Interclubes de Basquete</h2>
+                                    <p style={{fontSize: '1.2rem', lineHeight: '1.6', maxWidth: '900px', margin: '0 auto', color: 'var(--text-main)'}}>
+                                        Considerada A Maior Copa de Todos os Tempos! Com uma estrutura grandiosa e participação confirmada de vários estados do Nordeste. Nosso principal objetivo é reunir as melhores equipes da região em uma disputa intensa, promovendo uma interação direta e proporcionando excelentes oportunidades para que os atletas nordestinos mostrem todo o seu talento.
+                                    </p>
+                                </div>
+                                
+                                <div className="bento-grid">
+                                    <div className="card glass-panel" style={{borderColor: 'var(--golden-yellow)'}}>
+                                        <h2 style={{color: 'var(--golden-yellow)'}}>🏀 1ª Etapa <span style={{fontSize: '0.9rem', background: 'var(--golden-yellow)', color: '#000', padding: '4px 8px', borderRadius: '8px', marginLeft: 'auto'}}>Em andamento</span></h2>
+                                        <ul style={{listStyle: 'none', fontSize: '1.1rem', lineHeight: '1.8', color: 'var(--text-main)'}}>
+                                            <li><strong>📅 Data:</strong> 02 a 05 de Abril</li>
+                                            <li><strong>👦 Categorias:</strong> Sub-13, Sub-15 e Sub-17 Masculino</li>
+                                            <li><strong>📍 Locais:</strong> Instituto Brasil e IFRN Parnamirim</li>
+                                        </ul>
+                                    </div>
+                                    <div className="card glass-panel">
+                                        <h2 style={{color: '#38bdf8'}}>🚀 2ª Etapa <span style={{fontSize: '0.9rem', background: '#38bdf8', color: '#000', padding: '4px 8px', borderRadius: '8px', marginLeft: 'auto'}}>Vem Aí!</span></h2>
+                                        <ul style={{listStyle: 'none', fontSize: '1.1rem', lineHeight: '1.8', color: 'var(--text-main)'}}>
+                                            <li><strong>📅 Data:</strong> 18 a 21 de Abril</li>
+                                            <li><strong>⛹️ Categorias:</strong> Sub-15, Sub-17, Sub-19 Feminino e Sub-19 Masculino</li>
+                                            <li><strong>📝 Inscrições:</strong> Até 18 de Março (preenchimento de vagas remanescentes até 21 de Março)</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <div style={{display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap', marginTop: '24px'}}>
+                                    <a href="https://www.instagram.com/copanordesteinterclubes/" target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                        📸 Siga a @copanordesteinterclubes
+                                    </a>
+                                    <a href="https://www.instagram.com/desportivoriogrande?igsh=eWZ3OHo0ZzM0bGww" target="_blank" rel="noopener noreferrer" className="btn" style={{textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                        🏀 Organização: Desportivo Rio Grande
+                                    </a>
+                                </div>
+                            </div>
+                        )}
 
                         {view === 'standings' && (
                             <div className="standings-container">
@@ -1251,7 +1345,7 @@
                                                         {/* MVP PANEL */}
                                                         <div>
                                                             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px'}}>
-                                                                <div style={{fontSize: '0.85rem', color: 'var(--golden-yellow)', fontWeight: 'bold'}}>⭐ Maiores Pontuadores (M.V.P)</div>
+                                                                <div style={{fontSize: '0.85rem', color: 'var(--golden-yellow)', fontWeight: 'bold'}}>⭐ Maiores pontuadores (Cestinhas)</div>
                                                                 <button onClick={() => addHighlightPlayer(game.id, 'mvps')} style={{background: 'rgba(255,199,44,0.2)', border: '1px solid var(--golden-yellow)', color: 'var(--golden-yellow)', borderRadius: '4px', padding: '2px 8px', fontSize: '0.75rem', cursor: 'pointer'}}>+ Adicionar Atleta</button>
                                                             </div>
                                                             {(game.topScorer?.mvps || []).map((p, idx) => (
@@ -1272,8 +1366,8 @@
                                                         {/* SNIPER PANEL */}
                                                         <div>
                                                             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px'}}>
-                                                                <div style={{fontSize: '0.85rem', color: '#38bdf8', fontWeight: 'bold'}}>🎯 Cestas de 3 Pontos (Snipers)</div>
-                                                                <button onClick={() => addHighlightPlayer(game.id, 'threes')} style={{background: 'rgba(56,189,248,0.2)', border: '1px solid #38bdf8', color: '#38bdf8', borderRadius: '4px', padding: '2px 8px', fontSize: '0.75rem', cursor: 'pointer'}}>+ Adicionar Sniper</button>
+                                                                <div style={{fontSize: '0.85rem', color: '#38bdf8', fontWeight: 'bold'}}>🎯 Cestas de 3 pontos (Shooters)</div>
+                                                                <button onClick={() => addHighlightPlayer(game.id, 'threes')} style={{background: 'rgba(56,189,248,0.2)', border: '1px solid #38bdf8', color: '#38bdf8', borderRadius: '4px', padding: '2px 8px', fontSize: '0.75rem', cursor: 'pointer'}}>+ Adicionar Shooter</button>
                                                             </div>
                                                             {(game.topScorer?.threes || []).map((p, idx) => (
                                                                 <div key={idx} style={{display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px'}}>
@@ -1356,7 +1450,7 @@
                                         <div className="bento-grid" style={{marginBottom: '30px'}}>
                                             {Object.keys(allStats.playersByCategory).sort().map(cat => (
                                                 <div key={cat} className="card glass-panel" style={{flex: 1, minWidth: '300px'}}>
-                                                    <h2 style={{color: 'var(--golden-yellow)'}}>🏆 Rank MVP {cat}</h2>
+                                                    <h2 style={{color: 'var(--golden-yellow)'}}>🏆 Rank Cestinhas {cat}</h2>
                                                     <table>
                                                         <thead><tr><th style={{width: '30px'}}>#</th><th>Atleta / Clube</th><th className="stat-cell" style={{width: '60px'}}>PTs</th></tr></thead>
                                                         <tbody>
@@ -1409,21 +1503,21 @@
                                     </>
                                 ) : (
                                     <div className="card glass-panel" style={{textAlign: 'center', padding: '30px', color: 'var(--text-muted)', marginBottom: '30px'}}>
-                                        Ainda não há dados de pontuadores (M.V.P) lançados nos jogos encerrados.
+                                        Ainda não há dados de pontuadores (Cestinhas) lançados nos jogos encerrados.
                                     </div>
                                 )}
                                 
                                 {allStats.snipersOverall?.length > 0 && (
                                     <>
                                         <div style={{marginTop: '30px', marginBottom: '20px', borderBottom: '2px solid #38bdf8', paddingBottom: '10px'}}>
-                                            <h2 style={{fontSize: '2rem', color: '#38bdf8'}}>🎯 Cestas de 3 Pontos (Snipers)</h2>
+                                            <h2 style={{fontSize: '2rem', color: '#38bdf8'}}>🎯 Cestas de 3 pontos (Shooters)</h2>
                                         </div>
                                         
                                         <div className="stats-bento" style={{marginBottom: '20px'}}>
                                             <div className="stat-box glass-panel highlight" style={{flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: '20px', padding: '30px', background: 'linear-gradient(135deg, #0f172a 0%, #082f49 100%)', borderColor: 'rgba(56,189,248,0.3)'}}>
                                                 <TeamLogo team={allStats.snipersOverall[0].team} size={80} />
                                                 <div style={{textAlign: 'left'}}>
-                                                    <div style={{color: '#38bdf8', fontSize: '0.9rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '5px'}}>Maior Sniper da Competição</div>
+                                                    <div style={{color: '#38bdf8', fontSize: '0.9rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '5px'}}>Maior Shooter da Competição</div>
                                                     <div style={{fontSize: '2.5rem', fontFamily: 'Bebas Neue', lineHeight: 1}}>{allStats.snipersOverall[0].name} <span style={{fontSize: '1rem', color: 'var(--text-muted)'}}>#{allStats.snipersOverall[0].number}</span></div>
                                                     <div style={{fontSize: '1rem', color: 'var(--text-main)', marginTop: '5px'}}>
                                                         <span style={{background: 'var(--warriors-blue)', padding: '2px 8px', borderRadius: '4px', marginRight: '5px'}}>{allStats.snipersOverall[0].team}</span> 
@@ -1436,11 +1530,11 @@
                                             </div>
                                         </div>
 
-                                        <h3 style={{color: 'var(--text-main)', marginBottom: '15px'}}>🌟 Maiores Snipers por Categoria</h3>
+                                        <h3 style={{color: 'var(--text-main)', marginBottom: '15px'}}>🌟 Maiores Shooters por Categoria</h3>
                                         <div className="bento-grid" style={{marginBottom: '30px'}}>
                                             {Object.keys(allStats.snipersByCategory).sort().map(cat => (
                                                 <div key={cat} className="card glass-panel" style={{flex: 1, minWidth: '300px', borderColor: 'rgba(56,189,248,0.2)'}}>
-                                                    <h2 style={{color: '#38bdf8'}}>🎯 Rank Snipers {cat}</h2>
+                                                    <h2 style={{color: '#38bdf8'}}>🎯 Rank Shooters {cat}</h2>
                                                     <table>
                                                         <thead><tr><th style={{width: '30px'}}>#</th><th>Atleta / Clube</th><th className="stat-cell" style={{width: '60px'}}>3PTs</th></tr></thead>
                                                         <tbody>
@@ -1463,7 +1557,7 @@
                                             ))}
                                         </div>
 
-                                        <h3 style={{color: 'var(--text-main)', marginBottom: '15px'}}>🛡️ Maior Sniper de Cada Clube</h3>
+                                        <h3 style={{color: 'var(--text-main)', marginBottom: '15px'}}>🛡️ Maior Shooter de Cada Clube</h3>
                                         <div className="bento-grid">
                                             {Object.keys(allStats.snipersByClub).sort().map(team => (
                                                 <div key={team} className="card glass-panel" style={{flex: 1, minWidth: '280px', padding: '20px', borderColor: 'rgba(56,189,248,0.2)'}}>
@@ -1554,6 +1648,14 @@
                                 )}
                             </div>
                         )}
+
+                        <button 
+                            className={`back-to-top ${showScroll ? 'visible' : ''}`}
+                            onClick={scrollToTop}
+                            title="Voltar ao Topo"
+                        >
+                            ↑
+                        </button>
                     </div>
                 </>
             );
