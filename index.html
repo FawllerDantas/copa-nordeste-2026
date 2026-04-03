@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -319,12 +319,6 @@
         .badge-completed { background: var(--success); color: white; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
-        .stream-dot { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; font-size: 12px; background: rgba(220, 38, 38, 0.2); border: 2px solid var(--danger); cursor: pointer; position: relative; animation: pulseStream 2s infinite; }
-        @keyframes pulseStream { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }
-        .stream-popup { position: absolute; top: 100%; right: 0; background: #131420; border: 2px solid var(--danger); border-radius: 12px; padding: 12px; width: 340px; z-index: 10000; box-shadow: 0 10px 40px rgba(0,0,0,0.9); cursor: pointer; margin-top: 10px; }
-        .stream-popup::before { content: ''; position: absolute; top: -7px; right: 10px; width: 12px; height: 12px; background: #131420; border-top: 2px solid var(--danger); border-left: 2px solid var(--danger); transform: rotate(45deg); }
-        @media (max-width: 768px) { .stream-popup { right: auto; left: 50%; transform: translateX(-50%); width: 280px; } .stream-popup::before { right: auto; left: 50%; padding:0; margin-left:-6px; } }
-
         .game-teams { display: flex; justify-content: center; gap: 20px; align-items: center; flex-wrap: wrap; margin: 20px 0; }
         .team { display: flex; align-items: center; gap: 16px; }
         .team.home { justify-content: flex-end; text-align: right; }
@@ -587,11 +581,8 @@
             );
         };
 
-        const YOUTUBE_CHANNEL_ID = 'UCRSWTkvN7ZAU-lvFp4pFZQw';
-
         function App() {
             const [view, setView] = useState('about');
-            const [activeStream, setActiveStream] = useState(null);
             const [selectedCategories, setSelectedCategories] = useState(['U13']);
             const [theme, setTheme] = useState(() => localStorage.getItem('cni2026_theme') || 'dark');
             const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem('cni2026_admin') === 'true');
@@ -1322,14 +1313,7 @@
                                     </div>
                                 ) : (
                                     <div className="games-list">
-                                        {filteredGames.sort((a, b) => {
-                                            const dayA = a.day.split('/').reverse().join('');
-                                            const dayB = b.day.split('/').reverse().join('');
-                                            if (dayA !== dayB) return dayA.localeCompare(dayB);
-                                            return (a.time || '').localeCompare(b.time || '');
-                                        }).map(game => {
-                                            const isStreamVenue = game.venue.includes('INSTITUTO BRASIL') || game.venue.includes('JORGE TAVARES');
-                                            return (
+                                        {filteredGames.map(game => (
                                             <div key={game.id} className={`game-card glass-panel ${game.status === 'completed' ? 'completed' : ''}`}>
                                                 <div className="game-header">
                                                     <div style={{display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap'}}>
@@ -1342,48 +1326,6 @@
                                                         <span className="badge badge-info">{game.phase === 'groups' ? `CHAVE ${game.group}` : game.group}</span>
                                                         <span className="badge" style={{background: 'var(--golden-yellow)', color: 'black'}}>{game.category}</span>
                                                     </div>
-                                                    
-                                                    {isStreamVenue && (
-                                                        <div style={{display: 'flex', marginLeft: 'auto'}}>
-                                                            {game.status === 'pending' && (
-                                                                <span className="badge" style={{background: 'rgba(255,255,255,0.1)', color: 'var(--text-muted)', border: '1px solid var(--glass-border)', display: 'flex', gap: '6px', alignItems: 'center'}}>
-                                                                    <img src="./assets/logos/gametimetv.png" alt="TV" style={{height: '14px', objectFit: 'contain'}} onError={(e) => { e.target.style.display = 'none'; }} /> 
-                                                                    Agendada
-                                                                </span>
-                                                            )}
-                                                            {game.status === 'live' && (
-                                                                <div 
-                                                                    style={{position: 'relative', display: 'flex'}} 
-                                                                    onMouseEnter={() => setActiveStream(game.id)} 
-                                                                    onMouseLeave={() => setActiveStream(null)} 
-                                                                    onClick={() => setActiveStream(activeStream === game.id ? null : game.id)}
-                                                                >
-                                                                    <span className="stream-dot">▶️</span>
-                                                                    
-                                                                    {activeStream === game.id && (
-                                                                        <div className="stream-popup" onClick={() => window.open('https://www.youtube.com/@GameTimeTV_25', '_blank')}>
-                                                                            <div style={{paddingBottom: '10px', marginBottom: '10px', borderBottom: '1px solid rgba(220, 38, 38, 0.2)', fontWeight: 'bold', color: '#dc2626'}}>
-                                                                                🔴 ASSISTIR GAME TIME TV
-                                                                            </div>
-                                                                            <div style={{width: '100%', aspectRatio: '16/9', pointerEvents: 'none'}}>
-                                                                                <iframe 
-                                                                                    width="100%" 
-                                                                                    height="100%" 
-                                                                                    src={"https://www.youtube.com/embed/live_stream?channel=" + YOUTUBE_CHANNEL_ID + "&autoplay=1&mute=1"} 
-                                                                                    frameBorder="0" 
-                                                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                                                                    allowFullScreen
-                                                                                ></iframe>
-                                                                            </div>
-                                                                            <div style={{paddingTop: '10px', textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-muted)'}}>
-                                                                                Clique para abrir o canal no YouTube
-                                                                            </div>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    )}
                                                 </div>
                                                 <div className="game-teams">
                                                     <div className="team home" style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
@@ -1459,8 +1401,7 @@
                                                     </div>
                                                 )}
                                             </div>
-                                            );
-                                        })}
+                                        ))}
                                     </div>
                                 )}
                             </>
@@ -1678,27 +1619,8 @@
                         )}
 
 
-                        <footer style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', paddingTop: '40px', paddingBottom: '20px'}}>
-                            <div style={{display: 'flex', gap: '20px', justifyContent: 'center', flexWrap: 'wrap'}}>
-                                <a target="_blank" href="https://www.instagram.com/copanordesteinterclubes/" style={{background: 'var(--golden-yellow)', color: '#000', fontWeight: '700', borderRadius: '12px', padding: '10px 20px', display: 'flex', gap: '8px', alignItems: 'center', textDecoration: 'none'}}>
-                                    <img src="./assets/logos/logocni-ig.png" style={{height: '24px', objectFit: 'contain'}} onError={(e) => { e.target.style.display = 'none'; }}/> Siga a @copanordesteinterclubes
-                                </a>
-                                <a target="_blank" href="https://www.instagram.com/desportivoriogrande?igsh=eWZ3OHo0ZzM0bGww" style={{background: 'var(--warriors-blue)', color: '#fff', fontWeight: '700', borderRadius: '12px', padding: '10px 20px', display: 'flex', gap: '8px', alignItems: 'center', textDecoration: 'none'}}>
-                                    <img src="./assets/logos/logodrg-ig.png" style={{height: '24px', objectFit: 'contain'}} onError={(e) => { e.target.style.display = 'none'; }}/> Organização: Desportivo Rio Grande
-                                </a>
-                            </div>
-                            
-                            <div style={{fontSize: '1.1rem', fontWeight: '600', color: 'var(--text-main)'}}>
-                                Assista ao Vivo pelo Canal
-                            </div>
-                            
-                            <a target="_blank" href="https://www.youtube.com/@GameTimeTV_25" style={{background: '#131420', color: 'var(--golden-yellow)', border: '1px solid var(--golden-yellow)', fontWeight: '700', borderRadius: '12px', padding: '10px 20px', display: 'flex', gap: '8px', alignItems: 'center', textDecoration: 'none', marginBottom: '20px'}}>
-                                <img src="./assets/logos/gametimetv.png" style={{height: '24px', objectFit: 'contain'}} onError={(e) => { e.target.style.display = 'none'; }}/> Game Time TV
-                            </a>
-                            
-                            <div>
-                                Desenvolvido por <a href="mailto:fawller@gmail.com" style={{color: 'var(--golden-yellow)', textDecoration: 'none'}}>Fawller Dantas (2026)</a>
-                            </div>
+                        <footer>
+                            Desenvolvido por <a href="mailto:fawller@gmail.com">Fawller Dantas 2026</a>
                         </footer>
                         
                         <div className="sync-badge">
