@@ -545,7 +545,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const YOUTUBE_CHANNEL_ID = 'UCRSWTkvN7ZAU-lvFp4pFZQw';
+        const YOUTUBE_LIVE_VIDEO_ID = 'IcpHmdy75uk';
         // CONFIGURAÇÃO DO SUPABASE
         const SUPABASE_URL = 'https://sgbrwoyygbycizvfwhkb.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_ktRyOlwOGl2JcuwkRzYx3A_zd9NIlKF';
@@ -1279,12 +1279,13 @@
                 });
             };
 
-            const handleMouseEnterTooltip = (e, teamName, category, jog) => {
+            const handleMouseEnterTooltip = (e, teamName, category, jog, phaseType = 'groups') => {
                 const rect = e.target.getBoundingClientRect();
                 setHoveredStats({
                     team: teamName,
                     cat: category,
                     jog: jog,
+                    phaseType: phaseType,
                     x: rect.left + window.scrollX + (rect.width / 2),
                     y: rect.top + window.scrollY - 10
                 });
@@ -1450,7 +1451,7 @@
                                                                             <td className="stat-cell">
                                                                                 <span 
                                                                                     style={{cursor: 'help', borderBottom: '1px dotted var(--golden-yellow)', paddingBottom: '2px'}}
-                                                                                    onMouseEnter={(e) => handleMouseEnterTooltip(e, team.team, cat, team.JOG)}
+                                                                                    onMouseEnter={(e) => handleMouseEnterTooltip(e, team.team, cat, team.JOG, 'groups')}
                                                                                     onMouseLeave={handleMouseLeaveTooltip}
                                                                                 >
                                                                                     {team.JOG}
@@ -1502,7 +1503,7 @@
                                                                                 {row.stats && row.stats.JOG > 0 ? (
                                                                                     <span 
                                                                                         style={{cursor: 'help', borderBottom: '1px dotted var(--golden-yellow)', paddingBottom: '2px'}}
-                                                                                        onMouseEnter={(e) => handleMouseEnterTooltip(e, row.team, cat, row.stats.JOG)}
+                                                                                        onMouseEnter={(e) => handleMouseEnterTooltip(e, row.team, cat, row.stats.JOG, 'finals')}
                                                                                         onMouseLeave={handleMouseLeaveTooltip}
                                                                                     >
                                                                                         {row.stats.JOG}
@@ -1716,12 +1717,12 @@
                                                                 <div style={{position: 'relative', display: 'inline-flex'}} onMouseEnter={() => setActiveStream(game.id)} onMouseLeave={() => setActiveStream(null)} onClick={() => setActiveStream(activeStream === game.id ? null : game.id)}>
                                                                     <span className="stream-dot">▶️</span>
                                                                     {activeStream === game.id && (
-                                                                        <div className="stream-popup" onClick={() => window.open(`https://www.youtube.com/@GameTimeTV_25`, '_blank')}>
+                                                                        <div className="stream-popup" onClick={() => window.open(`https://www.youtube.com/watch?v=${YOUTUBE_LIVE_VIDEO_ID}`, '_blank')}>
                                                                             <div style={{fontSize: '0.85rem', color: '#fff', marginBottom: '8px', textAlign: 'center', fontWeight: 'bold'}}>🔴 ASSISTIR GAME TIME TV</div>
                                                                             <div style={{position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: '8px', pointerEvents: 'none'}}>
-                                                                                <iframe style={{position: 'absolute', top: 0, left: 0, width: '100%', height: '100%'}} src={`https://www.youtube.com/embed/live_stream?channel=${YOUTUBE_CHANNEL_ID}&autoplay=1&mute=1`} frameBorder="0" allowFullScreen></iframe>
+                                                                                <iframe style={{position: 'absolute', top: 0, left: 0, width: '100%', height: '100%'}} src={`https://www.youtube.com/embed/${YOUTUBE_LIVE_VIDEO_ID}?autoplay=1&mute=1`} frameBorder="0" allowFullScreen></iframe>
                                                                             </div>
-                                                                            <div style={{background: 'var(--danger)', color: 'white', textAlign: 'center', padding: '8px', borderRadius: '8px', marginTop: '8px', fontSize: '0.9rem', fontWeight: 'bold'}}>Abrir Canal em Nova Guia</div>
+                                                                            <div style={{background: 'var(--danger)', color: 'white', textAlign: 'center', padding: '8px', borderRadius: '8px', marginTop: '8px', fontSize: '0.9rem', fontWeight: 'bold'}}>Abrir Transmissão em Nova Guia</div>
                                                                         </div>
                                                                     )}
                                                                 </div>
@@ -2215,7 +2216,7 @@
                         {hoveredStats && (
                             <div className="tooltip-portal" style={{ top: hoveredStats.y, left: hoveredStats.x }}>
                                 <div style={{fontWeight: '900', marginBottom: '12px', borderBottom: '1px solid rgba(255,199,44,0.3)', paddingBottom: '8px', fontSize: '1rem'}}>📅 Desempenho: {hoveredStats.team}</div>
-                                {games.filter(g => g.category === hoveredStats.cat && g.status === 'completed' && (g.homeTeam === hoveredStats.team || g.awayTeam === hoveredStats.team)).map(g => {
+                                {games.filter(g => g.category === hoveredStats.cat && g.status === 'completed' && (g.homeTeam === hoveredStats.team || g.awayTeam === hoveredStats.team) && (hoveredStats.phaseType === 'groups' ? g.phase === 'groups' : g.phase !== 'groups')).map(g => {
                                     const isHome = g.homeTeam === hoveredStats.team;
                                     const opponent = isHome ? g.awayTeam : g.homeTeam;
                                     const myScore = isHome ? g.homeScore : g.awayScore;
