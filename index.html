@@ -612,9 +612,9 @@
                 { id: 51, category: 'U17', group: 'DISP. 5º/7º', day: '04/04', time: '15H00', venue: 'IFRN PARNAMIRIM', homeTeam: '5º RANKING', awayTeam: '6º RANKING', phase: 'classification' },
                 { id: 52, category: 'U17', group: 'DISP. 11º/13º', day: '04/04', time: '08H00', venue: 'JORGE TAVARES', homeTeam: '12º RANKING', awayTeam: '13º RANKING', phase: 'classification' },
                 { id: 53, category: 'U15', group: 'DISP. 8º/9º', day: '04/04', time: '09H30', venue: 'JORGE TAVARES', homeTeam: '9º RANKING', awayTeam: '8º RANKING', phase: 'classification' },
-                { id: 54, category: 'U15', group: 'DISP. 5º/7º', day: '04/04', time: '11H00', venue: 'JORGE TAVARES', homeTeam: '5º RANKING', awayTeam: '6º RANKING', phase: 'classification' },
+                { id: 54, category: 'U15', group: 'DISP. 5º/7º', day: '04/04', time: '14H00', venue: 'JORGE TAVARES', homeTeam: '5º RANKING', awayTeam: '6º RANKING', phase: 'classification' },
                 { id: 55, category: 'U17', group: 'DISP. 8º/10º', day: '04/04', time: '12H30', venue: 'JORGE TAVARES', homeTeam: '8º RANKING', awayTeam: '9º RANKING', phase: 'classification' },
-                { id: 56, category: 'U15', group: 'DISP. 5º/7º', day: '04/04', time: '14H00', venue: 'JORGE TAVARES', homeTeam: 'DRG 1 (RN)', awayTeam: 'DRG 2 (RN)', phase: 'classification' },
+                { id: 56, category: 'U17', group: 'DISP. 11º/13º', day: '04/04', time: '11H00', venue: 'JORGE TAVARES', homeTeam: '11º RANKING', awayTeam: '12º RANKING', phase: 'classification' },
                 { id: 57, category: 'U15', group: 'DISP. 8º/9º', day: '04/04', time: '15H30', venue: 'JORGE TAVARES', homeTeam: '8º RANKING', awayTeam: '9º RANKING', phase: 'classification' },
 
                 // Dia 05/04 - Domingo
@@ -1464,11 +1464,6 @@
 
                                     const matchCard = (g, extraStyle) => (
                                         <div key={g.id} className="bracket-match" style={extraStyle}>
-                                            {classificationPositionLabels[g.id] && (
-                                                <div style={{fontSize: '0.68rem', background: 'rgba(255,199,44,0.12)', color: 'var(--golden-yellow)', padding: '3px 8px', borderRadius: '6px', marginBottom: '8px', textAlign: 'center', fontWeight: '700', letterSpacing: '0.5px'}}>
-                                                    {classificationPositionLabels[g.id]}
-                                                </div>
-                                            )}
                                             <div className="bracket-team">
                                                 <span style={{display: 'flex', alignItems: 'center', gap: '6px'}}><TeamLogo team={g.homeTeam} size={20}/> {g.homeTeam}</span>
                                                 <span className="bracket-score">{g.homeScore != null ? g.homeScore : '-'}</span>
@@ -2105,7 +2100,7 @@
                                     Assista ao Vivo pelo Canal <img src="./assets/logos/gametimetv.png" alt="Game Time TV" style={{height: '24px', objectFit: 'contain', margin: '0 8px'}}/> Game Time TV
                                 </a>
                             </div>
-                            <div style={{color: 'var(--text-muted)'}}>
+                            <div style={{color: 'var(--text-muted)', textAlign: 'center'}}>
                                 Desenvolvido por <span style={{color: 'var(--golden-yellow)'}}>Fawller Dantas 2026</span>
                             </div>
                         </footer>
