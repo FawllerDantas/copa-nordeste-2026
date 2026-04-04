@@ -985,6 +985,83 @@
                 return cloned;
             }, [games]);
 
+            const dynamicFinalStandings = useMemo(() => {
+                const result = { U13: [], U15: [], U17: [] };
+
+                const resolveMatch = (game, pos1, pos2) => {
+                    if (!game) return [];
+                    // Se o jogo não aconteceu, reserva a vaga mostrando os times previstos ou "A DEFINIR"
+                    if (game.status !== 'completed' && game.status !== 'live') {
+                        return [
+                            { pos: pos1, team: game.homeTeam || 'A DEFINIR' }, 
+                            { pos: pos2, team: game.awayTeam || 'A DEFINIR' }
+                        ];
+                    }
+                    // Se o jogo está rolando ou acabou, ordena pelo placar em tempo real
+                    const hScore = game.homeScore || 0;
+                    const aScore = game.awayScore || 0;
+                    if (hScore > aScore) {
+                        return [{ pos: pos1, team: game.homeTeam, score: hScore }, { pos: pos2, team: game.awayTeam, score: aScore }];
+                    } else if (aScore > hScore) {
+                        return [{ pos: pos1, team: game.awayTeam, score: aScore }, { pos: pos2, team: game.homeTeam, score: hScore }];
+                    } else {
+                        return [{ pos: pos1, team: `${game.homeTeam} (Empate)`, score: hScore }, { pos: pos2, team: `${game.awayTeam} (Empate)`, score: aScore }];
+                    }
+                };
+
+                const calcDisp = (cat, group, startPos) => {
+                    const groupGames = dynamicGames.filter(g => g.category === cat && g.group === group && (g.status === 'completed' || g.status === 'live'));
+                    const teams = [...new Set([...dynamicGames.filter(g => g.category === cat && g.group === group).map(g => g.homeTeam), ...dynamicGames.filter(g => g.category === cat && g.group === group).map(g => g.awayTeam)])].filter(t => t && !t.includes('RANKING'));
+
+                    const std = teams.map(team => {
+                        let stats = { team, JOG: 0, VIT: 0, DER: 0, PTS: 0, CPO: 0, CCO: 0, SDO: 0 };
+                        groupGames.forEach(game => {
+                            if (game.homeTeam !== team && game.awayTeam !== team) return;
+                            stats.JOG++;
+                            const isHome = game.homeTeam === team;
+                            const s = isHome ? (game.homeScore || 0) : (game.awayScore || 0);
+                            const c = isHome ? (game.awayScore || 0) : (game.homeScore || 0);
+                            stats.CPO += s; stats.CCO += c;
+                            if (s > c) { stats.VIT++; stats.PTS += 2; }
+                            else if (c > s) { stats.DER++; stats.PTS += 1; }
+                            else { stats.PTS += 1; }
+                        });
+                        stats.SDO = stats.CPO - stats.CCO;
+                        return stats;
+                    });
+
+                    // Critérios de Desempate: Pontos > Confronto Direto > Saldo > Cestas Pró
+                    std.sort((a, b) => {
+                        if (b.PTS !== a.PTS) return b.PTS - a.PTS;
+                        const headToHead = groupGames.find(g => (g.homeTeam === a.team && g.awayTeam === b.team) || (g.homeTeam === b.team && g.awayTeam === a.team));
+                        if (headToHead && (headToHead.status === 'completed' || headToHead.status === 'live')) {
+                            const aScore = headToHead.homeTeam === a.team ? headToHead.homeScore||0 : headToHead.awayScore||0;
+                            const bScore = headToHead.homeTeam === b.team ? headToHead.homeScore||0 : headToHead.awayScore||0;
+                            if (aScore !== bScore) return bScore - aScore;
+                        }
+                        if (b.SDO !== a.SDO) return b.SDO - a.SDO;
+                        return b.CPO - a.CPO;
+                    });
+
+                    return std.map((t, idx) => ({ pos: `${startPos + idx}º`, team: t.team, stats: t }));
+                };
+
+                ['U13', 'U15', 'U17'].forEach(cat => {
+                    const catGames = dynamicGames.filter(g => g.category === cat);
+                    let list = [
+                        ...resolveMatch(catGames.find(g => g.group === 'FINAL'), '1º', '2º'),
+                        ...resolveMatch(catGames.find(g => g.group === '3º/4º'), '3º', '4º'),
+                        ...calcDisp(cat, 'DISP. 5º/7º', 5)
+                    ];
+                    if (cat === 'U15') list = [...list, ...calcDisp(cat, 'DISP. 8º/9º', 8)];
+                    else if (cat === 'U17') {
+                        list = [...list, ...calcDisp(cat, 'DISP. 8º/10º', 8), ...calcDisp(cat, 'DISP. 11º/13º', 11)];
+                    }
+                    result[cat] = list;
+                });
+                return result;
+            }, [dynamicGames]);
+
             const categoryGames = dynamicGames.filter(g => selectedCategories.includes(g.category));
             
             const activeMatchDays = [...new Set(dynamicGames.filter(g => g.status === 'completed' || g.status === 'live').map(g => g.day))].sort((a, b) => a.localeCompare(b));
@@ -1275,7 +1352,7 @@
                                                 <button className={`tab ${standingsSubView === 'finals' ? 'active' : ''}`} onClick={() => setStandingsSubView('finals')}>Fase Final</button>
                                             </div>
 
-                                            {standingsSubView === 'groups' ? (
+                                            {standingsSubView === 'groups' && (
                                                 Object.keys(initialTournamentData.teams[cat] || {}).map(group => (
                                                     <div key={group} className="card glass-panel" style={{marginBottom: '20px'}}>
                                                         <h2>Chave {group}</h2>
@@ -1321,54 +1398,46 @@
                                                         </div>
                                                     </div>
                                                 ))
-                                            ) : (
-                                                <div className="card glass-panel" style={{marginBottom: '20px'}}>
-                                                    <h2>Estatísticas da Fase Final</h2>
-                                                    <div className="table-container">
-                                                        <table>
-                                                            <thead>
-                                                                <tr>
-                                                                    <th>Equipe</th>
-                                                                    <th className="stat-cell">J</th>
-                                                                    <th className="stat-cell">V</th>
-                                                                    <th className="stat-cell">D</th>
-                                                                    <th className="stat-cell">PRO</th>
-                                                                    <th className="stat-cell">CON</th>
-                                                                    <th className="stat-cell">SDO</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                {(() => {
-                                                                    const tStats = {};
-                                                                    const finalsGames = dynamicGames.filter(g => g.category === cat && g.phase !== 'groups' && g.status === 'completed');
-                                                                    finalsGames.forEach(g => {
-                                                                        [ {t: g.homeTeam, s: g.homeScore, c: g.awayScore}, {t: g.awayTeam, s: g.awayScore, c: g.homeScore} ].forEach(side => {
-                                                                            if (!side.t || side.t.includes('1º') || side.t.includes('2º') || side.t.includes('RANKING') || side.t.includes('VENC.') || side.t.includes('PERD.')) return;
-                                                                            if (!tStats[side.t]) tStats[side.t] = { team: side.t, JOG: 0, VIT: 0, DER: 0, CPO: 0, CCO: 0, SDO: 0 };
-                                                                            tStats[side.t].JOG++;
-                                                                            tStats[side.t].CPO += side.s;
-                                                                            tStats[side.t].CCO += side.c;
-                                                                            tStats[side.t].SDO += (side.s - side.c);
-                                                                            if (side.s > side.c) tStats[side.t].VIT++;
-                                                                            else if (side.c > side.s) tStats[side.t].DER++;
-                                                                        });
-                                                                    });
-                                                                    return Object.values(tStats).sort((a,b) => b.VIT - a.VIT || b.SDO - a.SDO).map(team => (
-                                                                        <tr key={team.team}>
-                                                                            <td className="team-name" style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                                                                <TeamLogo team={team.team} size={25}/> {team.team}
+                                            )}
+                                            {standingsSubView === 'finals' && (
+                                                <div style={{width: '100%', marginBottom: '30px'}}>
+                                                    <h2 style={{textAlign: 'center', color: 'var(--golden-yellow)', marginBottom: '15px'}}>Classificação da Fase Final: {cat}</h2>
+                                                    <div className="card glass-panel" style={{marginBottom: '20px'}}>
+                                                        <div className="table-container">
+                                                            <table>
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>Pos</th>
+                                                                        <th>Equipe</th>
+                                                                        <th className="stat-cell">J</th>
+                                                                        <th className="stat-cell">V</th>
+                                                                        <th className="stat-cell">D</th>
+                                                                        <th className="stat-cell">SDO</th>
+                                                                        <th className="stat-cell text-yellow">PTS</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    {dynamicFinalStandings[cat].map((row, idx) => {
+                                                                        const isReserved = parseInt(row.pos) <= 4;
+                                                                        const isDefined = row.team !== 'A DEFINIR' && !row.team.includes('Empate') && !row.team.includes('VENC.') && !row.team.includes('PERD.');
+                                                                        return (
+                                                                        <tr key={idx}>
+                                                                            <td style={{fontWeight: 'bold', color: isReserved ? 'var(--golden-yellow)' : 'var(--text-muted)'}}>{row.pos}</td>
+                                                                            <td className="team-name" style={{display: 'flex', alignItems: 'center', gap: '8px', color: isDefined ? 'var(--text-main)' : 'var(--text-muted)'}}>
+                                                                                {isDefined ? <TeamLogo team={row.team} size={25}/> : <div style={{width: 25, height: 25, borderRadius: '50%', background: 'rgba(255,255,255,0.05)'}}></div>}
+                                                                                {row.team}
                                                                             </td>
-                                                                            <td className="stat-cell">{team.JOG}</td>
-                                                                            <td className="stat-cell">{team.VIT}</td>
-                                                                            <td className="stat-cell">{team.DER}</td>
-                                                                            <td className="stat-cell">{team.CPO}</td>
-                                                                            <td className="stat-cell">{team.CCO}</td>
-                                                                            <td className="stat-cell">{team.SDO}</td>
+                                                                            <td className="stat-cell">{row.stats ? row.stats.JOG : '-'}</td>
+                                                                            <td className="stat-cell">{row.stats ? row.stats.VIT : '-'}</td>
+                                                                            <td className="stat-cell">{row.stats ? row.stats.DER : '-'}</td>
+                                                                            <td className="stat-cell">{row.stats ? row.stats.SDO : '-'}</td>
+                                                                            <td className="stat-cell text-yellow" style={{fontWeight: 900}}>{row.stats ? row.stats.PTS : '-'}</td>
                                                                         </tr>
-                                                                    ));
-                                                                })()}
-                                                            </tbody>
-                                                        </table>
+                                                                        );
+                                                                    })}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             )}
