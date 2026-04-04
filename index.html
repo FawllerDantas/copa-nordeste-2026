@@ -964,13 +964,82 @@
             const dynamicGames = useMemo(() => {
                 const cloned = games.map(g => ({...g}));
                 ['U13', 'U15', 'U17'].forEach(cat => {
+                    const groupGames = cloned.filter(g => g.category === cat && g.phase === 'groups');
+                    const allGroupsCompleted = groupGames.length > 0 && groupGames.every(g => g.status === 'completed');
+            
+                    let sf1Home = '1º A', sf1Away = '2º B';
+                    let sf2Home = '1º B', sf2Away = '2º A';
+            
+                    if (cat === 'U15') { sf1Away = 'MELHOR 2º'; sf2Away = '1º C'; }
+                    if (cat === 'U17') { sf1Away = '1º D'; sf2Away = '1º C'; }
+            
+                    let nonQualifiers = [];
+            
+                    if (allGroupsCompleted) {
+                        const stdA = calculateStandings(cat, 'A');
+                        const stdB = calculateStandings(cat, 'B');
+            
+                        if (cat === 'U13') {
+                            sf1Home = stdA[0]?.team || sf1Home; sf1Away = stdB[1]?.team || sf1Away;
+                            sf2Home = stdB[0]?.team || sf2Home; sf2Away = stdA[1]?.team || sf2Away;
+                            if (stdA[2]) nonQualifiers.push({team: stdA[2].team, pos: 3, PTS: stdA[2].PTS, SDO: stdA[2].SDO, CPO: stdA[2].CPO});
+                            if (stdA[3]) nonQualifiers.push({team: stdA[3].team, pos: 4, PTS: stdA[3].PTS, SDO: stdA[3].SDO, CPO: stdA[3].CPO});
+                            if (stdB[2]) nonQualifiers.push({team: stdB[2].team, pos: 3, PTS: stdB[2].PTS, SDO: stdB[2].SDO, CPO: stdB[2].CPO});
+                        } else if (cat === 'U15') {
+                            const stdC = calculateStandings(cat, 'C');
+                            sf1Home = stdA[0]?.team || sf1Home;
+                            sf2Home = stdB[0]?.team || sf2Home;
+                            sf2Away = stdC[0]?.team || sf2Away;
+            
+                            const seconds = [stdA[1], stdB[1], stdC[1]].filter(Boolean);
+                            seconds.sort((a, b) => {
+                                if (b.PTS !== a.PTS) return b.PTS - a.PTS;
+                                if (b.SDO !== a.SDO) return b.SDO - a.SDO;
+                                return b.CPO - a.CPO;
+                            });
+                            sf1Away = seconds[0]?.team || sf1Away;
+                            seconds.slice(1).forEach(t => { if (t) nonQualifiers.push({team: t.team, pos: 2, PTS: t.PTS, SDO: t.SDO, CPO: t.CPO}); });
+                            if (stdA[2]) nonQualifiers.push({team: stdA[2].team, pos: 3, PTS: stdA[2].PTS, SDO: stdA[2].SDO, CPO: stdA[2].CPO});
+                            if (stdB[2]) nonQualifiers.push({team: stdB[2].team, pos: 3, PTS: stdB[2].PTS, SDO: stdB[2].SDO, CPO: stdB[2].CPO});
+                            if (stdC[2]) nonQualifiers.push({team: stdC[2].team, pos: 3, PTS: stdC[2].PTS, SDO: stdC[2].SDO, CPO: stdC[2].CPO});
+                        } else if (cat === 'U17') {
+                            const stdC = calculateStandings(cat, 'C');
+                            const stdD = calculateStandings(cat, 'D');
+                            sf1Home = stdA[0]?.team || sf1Home; sf1Away = stdD[0]?.team || sf1Away;
+                            sf2Home = stdB[0]?.team || sf2Home; sf2Away = stdC[0]?.team || sf2Away;
+                            if (stdA[1]) nonQualifiers.push({team: stdA[1].team, pos: 2, PTS: stdA[1].PTS, SDO: stdA[1].SDO, CPO: stdA[1].CPO});
+                            if (stdA[2]) nonQualifiers.push({team: stdA[2].team, pos: 3, PTS: stdA[2].PTS, SDO: stdA[2].SDO, CPO: stdA[2].CPO});
+                            if (stdA[3]) nonQualifiers.push({team: stdA[3].team, pos: 4, PTS: stdA[3].PTS, SDO: stdA[3].SDO, CPO: stdA[3].CPO});
+                            if (stdB[1]) nonQualifiers.push({team: stdB[1].team, pos: 2, PTS: stdB[1].PTS, SDO: stdB[1].SDO, CPO: stdB[1].CPO});
+                            if (stdB[2]) nonQualifiers.push({team: stdB[2].team, pos: 3, PTS: stdB[2].PTS, SDO: stdB[2].SDO, CPO: stdB[2].CPO});
+                            if (stdC[1]) nonQualifiers.push({team: stdC[1].team, pos: 2, PTS: stdC[1].PTS, SDO: stdC[1].SDO, CPO: stdC[1].CPO});
+                            if (stdC[2]) nonQualifiers.push({team: stdC[2].team, pos: 3, PTS: stdC[2].PTS, SDO: stdC[2].SDO, CPO: stdC[2].CPO});
+                            if (stdD[1]) nonQualifiers.push({team: stdD[1].team, pos: 2, PTS: stdD[1].PTS, SDO: stdD[1].SDO, CPO: stdD[1].CPO});
+                            if (stdD[2]) nonQualifiers.push({team: stdD[2].team, pos: 3, PTS: stdD[2].PTS, SDO: stdD[2].SDO, CPO: stdD[2].CPO});
+                        }
+                        nonQualifiers.sort((a, b) => {
+                            if (a.pos !== b.pos) return a.pos - b.pos;
+                            if (b.PTS !== a.PTS) return b.PTS - a.PTS;
+                            if (b.SDO !== a.SDO) return b.SDO - a.SDO;
+                            return b.CPO - a.CPO;
+                        });
+                    }
+            
                     const sf1Game = cloned.find(g => g.category === cat && g.group === 'SF1');
                     const sf2Game = cloned.find(g => g.category === cat && g.group === 'SF2');
                     const finalGame = cloned.find(g => g.category === cat && g.group === 'FINAL');
                     const thirdGame = cloned.find(g => g.category === cat && g.group === '3º/4º');
-
+            
+                    if (sf1Game && (sf1Game.homeTeam.includes('1º') || sf1Game.homeTeam.includes('MELHOR') || sf1Game.awayTeam.includes('1º') || sf1Game.awayTeam.includes('MELHOR'))) { 
+                        sf1Game.homeTeam = sf1Home; sf1Game.awayTeam = sf1Away; 
+                    }
+                    if (sf2Game && (sf2Game.homeTeam.includes('1º') || sf2Game.homeTeam.includes('MELHOR') || sf2Game.awayTeam.includes('1º') || sf2Game.awayTeam.includes('MELHOR'))) { 
+                        sf2Game.homeTeam = sf2Home; sf2Game.awayTeam = sf2Away; 
+                    }
+            
                     let finalHome = 'VENC. SF1', finalAway = 'VENC. SF2';
                     let thirdHome = 'PERD. SF1', thirdAway = 'PERD. SF2';
+                    
                     if (sf1Game?.status === 'completed') {
                         finalHome = sf1Game.homeScore > sf1Game.awayScore ? sf1Game.homeTeam : sf1Game.awayTeam;
                         thirdHome = sf1Game.homeScore > sf1Game.awayScore ? sf1Game.awayTeam : sf1Game.homeTeam;
@@ -979,8 +1048,18 @@
                         finalAway = sf2Game.homeScore > sf2Game.awayScore ? sf2Game.homeTeam : sf2Game.awayTeam;
                         thirdAway = sf2Game.homeScore > sf2Game.awayScore ? sf2Game.awayTeam : sf2Game.homeTeam;
                     }
+            
                     if (finalGame) { finalGame.homeTeam = finalHome; finalGame.awayTeam = finalAway; }
                     if (thirdGame) { thirdGame.homeTeam = thirdHome; thirdGame.awayTeam = thirdAway; }
+            
+                    if (nonQualifiers.length > 0) {
+                        const rankMap = {};
+                        nonQualifiers.forEach((nq, idx) => { rankMap[`${idx + 5}º RANKING`] = nq.team; });
+                        cloned.filter(g => g.category === cat && g.phase === 'classification').forEach(g => {
+                            if (g.homeTeam.includes('RANKING') && rankMap[g.homeTeam]) g.homeTeam = rankMap[g.homeTeam];
+                            if (g.awayTeam.includes('RANKING') && rankMap[g.awayTeam]) g.awayTeam = rankMap[g.awayTeam];
+                        });
+                    }
                 });
                 return cloned;
             }, [games]);
