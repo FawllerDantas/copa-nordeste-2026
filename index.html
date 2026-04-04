@@ -1498,7 +1498,19 @@
                                                                                 {isDefined ? <TeamLogo team={row.team} size={25}/> : <div style={{width: 25, height: 25, borderRadius: '50%', background: 'rgba(255,255,255,0.05)'}}></div>}
                                                                                 {row.team}
                                                                             </td>
-                                                                            <td className="stat-cell">{row.stats ? row.stats.JOG : '-'}</td>
+                                                                            <td className="stat-cell">
+                                                                                {row.stats && row.stats.JOG > 0 ? (
+                                                                                    <span 
+                                                                                        style={{cursor: 'help', borderBottom: '1px dotted var(--golden-yellow)', paddingBottom: '2px'}}
+                                                                                        onMouseEnter={(e) => handleMouseEnterTooltip(e, row.team, cat, row.stats.JOG)}
+                                                                                        onMouseLeave={handleMouseLeaveTooltip}
+                                                                                    >
+                                                                                        {row.stats.JOG}
+                                                                                    </span>
+                                                                                ) : (
+                                                                                    '-'
+                                                                                )}
+                                                                            </td>
                                                                             <td className="stat-cell">{row.stats ? row.stats.VIT : '-'}</td>
                                                                             <td className="stat-cell">{row.stats ? row.stats.DER : '-'}</td>
                                                                             <td className="stat-cell">{row.stats ? row.stats.SDO : '-'}</td>
