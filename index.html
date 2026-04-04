@@ -2216,7 +2216,7 @@
                         {hoveredStats && (
                             <div className="tooltip-portal" style={{ top: hoveredStats.y, left: hoveredStats.x }}>
                                 <div style={{fontWeight: '900', marginBottom: '12px', borderBottom: '1px solid rgba(255,199,44,0.3)', paddingBottom: '8px', fontSize: '1rem'}}>📅 Desempenho: {hoveredStats.team}</div>
-                                {games.filter(g => g.category === hoveredStats.cat && g.status === 'completed' && (g.homeTeam === hoveredStats.team || g.awayTeam === hoveredStats.team) && (hoveredStats.phaseType === 'groups' ? g.phase === 'groups' : g.phase !== 'groups')).map(g => {
+                                {games.filter(g => g.category === hoveredStats.cat && g.status === 'completed' && (g.homeTeam === hoveredStats.team || g.awayTeam === hoveredStats.team) && (hoveredStats.phaseType === 'groups' ? g.phase === 'groups' : true)).map(g => {
                                     const isHome = g.homeTeam === hoveredStats.team;
                                     const opponent = isHome ? g.awayTeam : g.homeTeam;
                                     const myScore = isHome ? g.homeScore : g.awayScore;
