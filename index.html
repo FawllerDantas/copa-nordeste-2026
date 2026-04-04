@@ -461,6 +461,53 @@
             transform: translateY(0);
         }
 
+        .stream-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(255, 0, 0, 0.2);
+            border: 2px solid red;
+            cursor: pointer;
+            position: relative;
+            animation: pulseStream 2s infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        @keyframes pulseStream {
+            0% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
+        }
+
+        .stream-popup {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: #131420;
+            border: 1px solid red;
+            width: 340px;
+            z-index: 10000;
+            cursor: pointer;
+            border-radius: 8px;
+            margin-top: 14px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stream-popup::after {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            right: 12px;
+            border-width: 8px;
+            border-style: solid;
+            border-color: transparent transparent red transparent;
+        }
+
         @media (max-width: 768px) {
             .game-teams { grid-template-columns: 1fr; gap: 10px; }
             .team.home { justify-content: flex-start; }
@@ -468,6 +515,7 @@
             .header-text h1 { font-size: 1.8rem; }
             .stat-value { font-size: 2.2rem; }
             .bracket-container { flex-direction: column; gap: 30px; }
+            .stream-popup { width: 280px; }
         }
     </style>
 </head>
@@ -475,6 +523,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
+        const YOUTUBE_CHANNEL_ID = 'UCRSWTkvN7ZAU-lvFp4pFZQw';
         // CONFIGURAÇÃO DO SUPABASE
         const SUPABASE_URL = 'https://sgbrwoyygbycizvfwhkb.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_ktRyOlwOGl2JcuwkRzYx3A_zd9NIlKF';
@@ -636,6 +685,10 @@
         };
 
         function App() {
+            const [gamesSubView, setGamesSubView] = useState('groups');
+            const [statsSubView, setStatsSubView] = useState('groups');
+            const [allStarEvents, setAllStarEvents] = useState([]);
+            const [activeStream, setActiveStream] = useState(null);
             const [view, setView] = useState('about');
             const [selectedCategories, setSelectedCategories] = useState(['U13']);
             const [theme, setTheme] = useState(() => localStorage.getItem('cni2026_theme') || 'dark');
@@ -676,10 +729,13 @@
                             const { data, error } = await supabaseClient.from('games').select('*');
                             if (!error && data) {
                                 setIsSupabaseConnected(true);
+                                const { data: allStarData, error: allStarError } = await supabaseClient.from('all_star_events').select('*');
+                                if (!allStarError && allStarData) setAllStarEvents(allStarData.sort((a,b) => a.id - b.id));
+                                
                                 // Mescla os placares do BD com os dados fixos
                                 const mergedGames = initialTournamentData.games.map(baseGame => {
                                     const dbGame = data.find(dg => dg.id === baseGame.id);
-                                    return dbGame ? { ...baseGame, homeScore: dbGame.homescore, awayScore: dbGame.awayscore, status: dbGame.status || 'pending' } : { ...baseGame, status: 'pending' };
+                                    return dbGame ? { ...baseGame, homeScore: dbGame.homescore, awayScore: dbGame.awayscore, status: dbGame.status || 'pending', topScorer: dbGame.topscorer } : { ...baseGame, status: 'pending' };
                                 });
                                 setGames(mergedGames);
                                 return;
@@ -1002,6 +1058,8 @@
                 if (filterStatus === 'completed' && game.status !== 'completed') return false;
                 if (filterStatus === 'pending' && game.status === 'completed') return false;
                 if (filterTeam !== 'all' && game.homeTeam !== filterTeam && game.awayTeam !== filterTeam) return false;
+                if (gamesSubView === 'groups' && game.phase !== 'groups') return false;
+                if (gamesSubView === 'finals' && game.phase === 'groups') return false;
                 return true;
             });
 
@@ -1023,7 +1081,7 @@
                 const threesStatsMap = {};
                 let totalPoints = 0;
                 
-                games.filter(g => g.status === 'completed').forEach(g => {
+                games.filter(g => g.status === 'completed' && (statsSubView === 'overall' || (statsSubView === 'groups' ? g.phase === 'groups' : g.phase !== 'groups'))).forEach(g => {
                     totalPoints += g.homeScore + g.awayScore;
                     
                     [ {t: g.homeTeam, s: g.homeScore, c: g.awayScore}, {t: g.awayTeam, s: g.awayScore, c: g.homeScore} ].forEach(side => {
@@ -1108,7 +1166,7 @@
                     snipersByCategory,
                     snipersByClub
                 };
-            }, [games]);
+            }, [games, statsSubView]);
 
             const toggleCategory = (cat) => {
                 setSelectedCategories(prev => {
@@ -1206,7 +1264,8 @@
                                 { id: 'standings', label: 'Classificação' },
                                 { id: 'bracket', label: 'Chaveamento' },
                                 { id: 'games', label: 'Jogos' },
-                                { id: 'stats', label: 'Estatísticas' }
+                                { id: 'stats', label: 'Estatísticas' },
+                                { id: 'allstar', label: 'All-Star' }
                             ].map(v => (
                                 <button key={v.id} className={`tab ${view === v.id ? 'active-alt' : ''}`} onClick={() => setView(v.id)}>
                                     {v.label}
@@ -1437,6 +1496,10 @@
 
                         {view === 'games' && (
                             <>
+                                <div className="tabs-container" style={{marginBottom: '10px'}}>
+                                    <button className={`tab ${gamesSubView === 'groups' ? 'active' : ''}`} onClick={() => setGamesSubView('groups')}>Fase de Classificação</button>
+                                    <button className={`tab ${gamesSubView === 'finals' ? 'active' : ''}`} onClick={() => setGamesSubView('finals')}>Fase Final e Disputas</button>
+                                </div>
                                 <div className="filter-bar glass-panel" style={{display: 'flex', flexWrap: 'wrap', gap: '10px'}}>
                                     <select className="filter-select" value={filterDay} onChange={e => setFilterDay(e.target.value)}>
                                         <option value="all">📅 Todos os Dias</option>
@@ -1466,7 +1529,9 @@
                                     </div>
                                 ) : (
                                     <div className="games-list">
-                                        {filteredGames.map(game => (
+                                        {filteredGames.map(game => {
+                                            const isStreamVenue = game.venue.includes('INSTITUTO BRASIL') || game.venue.includes('JORGE TAVARES');
+                                            return (
                                             <div key={game.id} className={`game-card glass-panel ${game.status === 'completed' ? 'completed' : ''}`}>
                                                 <div className="game-header">
                                                     <div style={{display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap'}}>
@@ -1484,6 +1549,29 @@
                                                         )}
                                                         <span className="badge" style={{background: 'var(--golden-yellow)', color: 'black'}}>{game.category}</span>
                                                     </div>
+                                                    {game.status === 'live' && isStreamVenue && (
+                                                        <div 
+                                                            style={{position: 'relative', marginLeft: 'auto'}}
+                                                            onMouseEnter={() => setActiveStream(game.id)} 
+                                                            onMouseLeave={() => setActiveStream(null)} 
+                                                            onClick={e => { e.stopPropagation(); setActiveStream(activeStream === game.id ? null : game.id); }}
+                                                        >
+                                                            <span className="stream-dot">▶️</span>
+                                                            {activeStream === game.id && (
+                                                                <div className="stream-popup" onClick={(e) => { e.stopPropagation(); window.open('https://www.youtube.com/@GameTimeTV_25', '_blank'); }}>
+                                                                    <div style={{padding: '12px', fontWeight: 'bold', color: 'white', textAlign: 'center', borderBottom: '1px solid rgba(255,0,0,0.3)', fontFamily: 'Bebas Neue', fontSize: '1.2rem', letterSpacing: '1px'}}>🔴 ASSISTIR GAME TIME TV</div>
+                                                                    <div style={{padding: '0'}}>
+                                                                        <iframe 
+                                                                            style={{width: '100%', aspectRatio: '16/9', border: 'none', pointerEvents: 'none'}} 
+                                                                            src={"https://www.youtube.com/embed/live_stream?channel=" + YOUTUBE_CHANNEL_ID + "&autoplay=1&mute=1"} 
+                                                                            allow="autoplay"
+                                                                        ></iframe>
+                                                                    </div>
+                                                                    <div style={{padding: '10px', fontSize: '0.85rem', color: 'var(--text-main)', textAlign: 'center', borderTop: '1px solid rgba(255,0,0,0.3)'}}>Clique para abrir o canal no YouTube</div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div className="game-teams">
                                                     <div className="team home" style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
@@ -1559,7 +1647,8 @@
                                                     </div>
                                                 )}
                                             </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </>
@@ -1567,7 +1656,118 @@
 
                         {view === 'stats' && (
                             <>
-                                <div className="stats-bento">
+                                <div className="tabs-container" style={{marginBottom: '20px'}}>
+                                    <button className={`tab ${statsSubView === 'groups' ? 'active' : ''}`} onClick={() => setStatsSubView('groups')}>Fase de Classificação</button>
+                                    <button className={`tab ${statsSubView === 'finals' ? 'active' : ''}`} onClick={() => setStatsSubView('finals')}>Fase Final</button>
+                                    <button className={`tab ${statsSubView === 'overall' ? 'active' : ''}`} onClick={() => setStatsSubView('overall')}>Ranking Final</button>
+                                </div>
+
+                                {statsSubView === 'overall' ? (
+                                    <>
+                                        <div style={{marginTop: '20px', marginBottom: '20px', borderBottom: '2px solid var(--golden-yellow)', paddingBottom: '10px'}}>
+                                            <h2 style={{fontSize: '2rem'}}>Ranking Final</h2>
+                                        </div>
+                                        <div className="bento-grid">
+                                            {selectedCategories.length === 0 ? (
+                                                <div className="empty-state glass-panel">Selecione pelo menos uma categoria acima para visualizar o ranking.</div>
+                                            ) : selectedCategories.map(cat => {
+                                                const catGames = dynamicGames.filter(g => g.category === cat);
+                                                const finalRank = [];
+                                                
+                                                const finalGame = catGames.find(g => g.group === 'FINAL');
+                                                const thirdGame = catGames.find(g => g.group === '3º/4º');
+                                                let c1 = 'VENC. FINAL', c2 = 'PERD. FINAL', c3 = 'VENC. 3º/4º', c4 = 'PERD. 3º/4º';
+                                                
+                                                if (finalGame && finalGame.status === 'completed' && finalGame.homeScore != null && finalGame.awayScore != null) {
+                                                    c1 = finalGame.homeScore > finalGame.awayScore ? finalGame.homeTeam : finalGame.awayTeam;
+                                                    c2 = finalGame.homeScore > finalGame.awayScore ? finalGame.awayTeam : finalGame.homeTeam;
+                                                }
+                                                if (thirdGame && thirdGame.status === 'completed' && thirdGame.homeScore != null && thirdGame.awayScore != null) {
+                                                    c3 = thirdGame.homeScore > thirdGame.awayScore ? thirdGame.homeTeam : thirdGame.awayTeam;
+                                                    c4 = thirdGame.homeScore > thirdGame.awayScore ? thirdGame.awayTeam : thirdGame.homeTeam;
+                                                }
+                                                finalRank.push({ pos: 1, team: c1 });
+                                                finalRank.push({ pos: 2, team: c2 });
+                                                finalRank.push({ pos: 3, team: c3 });
+                                                finalRank.push({ pos: 4, team: c4 });
+
+                                                const stdA = calculateStandings(cat, 'A');
+                                                const stdB = calculateStandings(cat, 'B');
+                                                let nonQualifiers = [];
+                                                if (cat === 'U13') {
+                                                    if (stdA[2]) nonQualifiers.push({team: stdA[2].team, pos: 3, PTS: stdA[2].PTS, SDO: stdA[2].SDO, CPO: stdA[2].CPO});
+                                                    if (stdA[3]) nonQualifiers.push({team: stdA[3].team, pos: 4, PTS: stdA[3].PTS, SDO: stdA[3].SDO, CPO: stdA[3].CPO});
+                                                    if (stdB[2]) nonQualifiers.push({team: stdB[2].team, pos: 3, PTS: stdB[2].PTS, SDO: stdB[2].SDO, CPO: stdB[2].CPO});
+                                                } else if (cat === 'U15') {
+                                                    const stdC = calculateStandings(cat, 'C');
+                                                    const seconds = [stdA[1], stdB[1], stdC[1]].filter(Boolean).sort((a,b) => {
+                                                        if (b.PTS !== a.PTS) return b.PTS - a.PTS;
+                                                        if (b.SDO !== a.SDO) return b.SDO - a.SDO;
+                                                        return b.CPO - a.CPO;
+                                                    });
+                                                    seconds.slice(1).forEach(t => { if (t) nonQualifiers.push({team: t.team, pos: 2, PTS: t.PTS, SDO: t.SDO, CPO: t.CPO}); });
+                                                    if (stdA[2]) nonQualifiers.push({team: stdA[2].team, pos: 3, PTS: stdA[2].PTS, SDO: stdA[2].SDO, CPO: stdA[2].CPO});
+                                                    if (stdB[2]) nonQualifiers.push({team: stdB[2].team, pos: 3, PTS: stdB[2].PTS, SDO: stdB[2].SDO, CPO: stdB[2].CPO});
+                                                    if (stdC[2]) nonQualifiers.push({team: stdC[2].team, pos: 3, PTS: stdC[2].PTS, SDO: stdC[2].SDO, CPO: stdC[2].CPO});
+                                                } else if (cat === 'U17') {
+                                                    const stdC = calculateStandings(cat, 'C');
+                                                    const stdD = calculateStandings(cat, 'D');
+                                                    if (stdA[1]) nonQualifiers.push({team: stdA[1].team, pos: 2, PTS: stdA[1].PTS, SDO: stdA[1].SDO, CPO: stdA[1].CPO});
+                                                    if (stdA[2]) nonQualifiers.push({team: stdA[2].team, pos: 3, PTS: stdA[2].PTS, SDO: stdA[2].SDO, CPO: stdA[2].CPO});
+                                                    if (stdA[3]) nonQualifiers.push({team: stdA[3].team, pos: 4, PTS: stdA[3].PTS, SDO: stdA[3].SDO, CPO: stdA[3].CPO});
+                                                    if (stdB[1]) nonQualifiers.push({team: stdB[1].team, pos: 2, PTS: stdB[1].PTS, SDO: stdB[1].SDO, CPO: stdB[1].CPO});
+                                                    if (stdB[2]) nonQualifiers.push({team: stdB[2].team, pos: 3, PTS: stdB[2].PTS, SDO: stdB[2].SDO, CPO: stdB[2].CPO});
+                                                    if (stdC[1]) nonQualifiers.push({team: stdC[1].team, pos: 2, PTS: stdC[1].PTS, SDO: stdC[1].SDO, CPO: stdC[1].CPO});
+                                                    if (stdC[2]) nonQualifiers.push({team: stdC[2].team, pos: 3, PTS: stdC[2].PTS, SDO: stdC[2].SDO, CPO: stdC[2].CPO});
+                                                    if (stdD[1]) nonQualifiers.push({team: stdD[1].team, pos: 2, PTS: stdD[1].PTS, SDO: stdD[1].SDO, CPO: stdD[1].CPO});
+                                                    if (stdD[2]) nonQualifiers.push({team: stdD[2].team, pos: 3, PTS: stdD[2].PTS, SDO: stdD[2].SDO, CPO: stdD[2].CPO});
+                                                }
+                                                nonQualifiers.sort((a,b) => {
+                                                    if (a.pos !== b.pos) return a.pos - b.pos;
+                                                    if (b.PTS !== a.PTS) return b.PTS - a.PTS;
+                                                    if (b.SDO !== a.SDO) return b.SDO - a.SDO;
+                                                    return b.CPO - a.CPO;
+                                                });
+                                                
+                                                nonQualifiers.forEach((nq, idx) => finalRank.push({ pos: idx + 5, team: nq.team }));
+                                                
+                                                const classGames = catGames.filter(g => g.phase === 'classification' && g.status === 'completed' && g.homeScore != null && g.awayScore != null);
+                                                classGames.forEach(g => {
+                                                    const homeIdx = finalRank.findIndex(r => r.team === g.homeTeam);
+                                                    const awayIdx = finalRank.findIndex(r => r.team === g.awayTeam);
+                                                    if (homeIdx !== -1 && awayIdx !== -1) {
+                                                        const winTeam = g.homeScore > g.awayScore ? g.homeTeam : g.awayTeam;
+                                                        const loseTeam = g.homeScore > g.awayScore ? g.awayTeam : g.homeTeam;
+                                                        const pos1 = Math.min(finalRank[homeIdx].pos, finalRank[awayIdx].pos);
+                                                        const pos2 = Math.max(finalRank[homeIdx].pos, finalRank[awayIdx].pos);
+                                                        finalRank.find(r => r.team === winTeam).pos = pos1;
+                                                        finalRank.find(r => r.team === loseTeam).pos = pos2;
+                                                    }
+                                                });
+                                                finalRank.sort((a, b) => a.pos - b.pos);
+
+                                                return (
+                                                    <div key={cat} className="card glass-panel" style={{flex: 1, minWidth: '300px'}}>
+                                                        <h2 style={{color: 'var(--warriors-blue-light)'}}>🏆 Classificação Final {cat}</h2>
+                                                        <table>
+                                                            <thead><tr><th style={{width: '60px'}}>Pos</th><th>Clube</th></tr></thead>
+                                                            <tbody>
+                                                                {finalRank.map((r, idx) => (
+                                                                    <tr key={idx}>
+                                                                        <td style={{fontWeight: 'bold', color: r.pos <= 3 ? 'var(--golden-yellow)' : 'var(--text-muted)'}}>{r.pos}º</td>
+                                                                        <td className="team-name" style={{display: 'flex', alignItems: 'center', gap: '10px'}}><TeamLogo team={r.team} size={30} /> {r.team}</td>
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="stats-bento">
                                     <div className="stat-box glass-panel highlight">
                                         <div className="stat-value">{allStats.totalPoints}</div>
                                         <div className="stat-label">Pontos Marcados (Geral)</div>
@@ -1773,17 +1973,96 @@
                                         </table>
                                     </div>
                                 </div>
+                                    </>
+                                )}
                             </>
                         )}
 
+                        {view === 'allstar' && (
+                            <div className="allstar-container">
+                                {isAdmin && (
+                                    <div className="card glass-panel" style={{marginBottom: '20px', borderColor: 'var(--success)'}}>
+                                        <h2 style={{color: 'var(--success)'}}>🛠️ Adicionar Evento (Admin)</h2>
+                                        <div style={{display: 'flex', gap: '10px'}}>
+                                            <input id="newEventTitle" placeholder="Título (ex: Torneio de Enterradas)" style={{flex: 1, padding: '10px', borderRadius: '8px', border: 'none'}} />
+                                            <button className="btn btn-primary" onClick={async () => {
+                                                const title = document.getElementById('newEventTitle').value;
+                                                if (!title) return;
+                                                const newEvt = { id: Date.now(), title, athletes: [] };
+                                                const { error } = await supabaseClient.from('all_star_events').upsert({ id: newEvt.id, title: newEvt.title, athletes: newEvt.athletes });
+                                                if (!error) { setAllStarEvents([...allStarEvents, newEvt].sort((a,b)=>a.id-b.id)); document.getElementById('newEventTitle').value = ''; }
+                                            }}>Criar</button>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                <div className="bento-grid">
+                                    {allStarEvents.map((evt) => (
+                                        <div key={evt.id} className="card glass-panel" style={{flex: 1, minWidth: '320px'}}>
+                                            <h2 style={{color: 'var(--golden-yellow)'}}>🌟 {evt.title}</h2>
+                                            {isAdmin && (
+                                                <div style={{background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px', marginBottom: '15px'}}>
+                                                    <div style={{display: 'flex', gap: '5px', flexWrap: 'wrap', marginBottom: '8px'}}>
+                                                        <input id={`evt_${evt.id}_pos`} placeholder="Posição" style={{width: '60px', padding: '5px', borderRadius: '5px'}}/>
+                                                        <input id={`evt_${evt.id}_name`} placeholder="Atleta" style={{flex: 1, minWidth: '100px', padding: '5px', borderRadius: '5px'}}/>
+                                                    </div>
+                                                    <div style={{display: 'flex', gap: '5px', flexWrap: 'wrap'}}>
+                                                        <input id={`evt_${evt.id}_team`} placeholder="Clube" style={{flex: 1, minWidth: '80px', padding: '5px', borderRadius: '5px'}}/>
+                                                        <input id={`evt_${evt.id}_cat`} placeholder="Cat" style={{width: '60px', padding: '5px', borderRadius: '5px'}}/>
+                                                        <input id={`evt_${evt.id}_pts`} placeholder="Pts/Tempo" style={{width: '80px', padding: '5px', borderRadius: '5px'}}/>
+                                                    </div>
+                                                    <button className="btn btn-primary" style={{marginTop: '10px', width: '100%'}} onClick={async () => {
+                                                        const p = document.getElementById(`evt_${evt.id}_pos`).value;
+                                                        const n = document.getElementById(`evt_${evt.id}_name`).value;
+                                                        const t = document.getElementById(`evt_${evt.id}_team`).value;
+                                                        const c = document.getElementById(`evt_${evt.id}_cat`).value;
+                                                        const ptt = document.getElementById(`evt_${evt.id}_pts`).value;
+                                                        if(!n || !p) return;
+                                                        const updatedAthletes = [...(evt.athletes || []), { pos: p, name: n, team: t, category: c, points: ptt }].sort((a,b) => parseInt(a.pos) - parseInt(b.pos));
+                                                        const updatedEvt = { ...evt, athletes: updatedAthletes };
+                                                        const { error } = await supabaseClient.from('all_star_events').upsert({ id: updatedEvt.id, title: updatedEvt.title, athletes: updatedEvt.athletes });
+                                                        if (!error) {
+                                                            setAllStarEvents(prev => prev.map(x => x.id === evt.id ? updatedEvt : x).sort((a,b)=>a.id-b.id));
+                                                            [`pos`,`name`,`team`,`cat`,`pts`].forEach(id => document.getElementById(`evt_${evt.id}_${id}`).value = '');
+                                                        }
+                                                    }}>Adicionar Participante/Vencedor</button>
+                                                </div>
+                                            )}
+                                            
+                                            {evt.athletes && evt.athletes.length > 0 ? (
+                                                <table>
+                                                    <thead><tr><th style={{width: '40px'}}>Pos</th><th>Atleta</th><th className="stat-cell">Métrica</th></tr></thead>
+                                                    <tbody>
+                                                        {evt.athletes.map((ath, idx) => (
+                                                            <tr key={idx}>
+                                                                <td style={{fontWeight: 'bold', color: parseInt(ath.pos) === 1 ? 'var(--golden-yellow)' : 'var(--text-muted)'}}>{ath.pos}º</td>
+                                                                <td className="team-name" style={{whiteSpace: 'normal', lineHeight: 1.2}}>
+                                                                    <div style={{display: 'flex', flexDirection: 'column', gap: '2px'}}>
+                                                                        <span style={{fontSize: '1.1rem'}}>{ath.name}</span>
+                                                                        <span style={{fontSize: '0.8rem', color: 'var(--text-muted)'}}>{ath.team} • {ath.category}</span>
+                                                                    </div>
+                                                                </td>
+                                                                <td className="stat-cell" style={{color: '#38bdf8', fontWeight: 'bold'}}>{ath.points}</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            ) : (
+                                                <div style={{textAlign: 'center', color: 'var(--text-muted)', padding: '20px'}}>Nenhum resultado registrado.</div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         <footer>
-                            <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', marginBottom: '24px', marginTop: '10px', flexWrap: 'wrap'}}>
-                                <span style={{color: 'var(--warriors-blue-light)', fontWeight: 'bold', fontSize: '1.2rem'}}>
-                                    Assista ao Vivo pelo Canal
-                                </span>
-                                <a href="https://www.youtube.com/@GameTimeTV_25" target="_blank" rel="noopener noreferrer" style={{color: 'var(--warriors-blue-light)', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold', fontSize: '1.2rem', textDecoration: 'none'}}>
-                                    <img src="./assets/logos/gametimetv.png" alt="Game Time TV" style={{height: '28px', objectFit: 'contain', borderRadius: '50%'}} /> 
-                                    Game Time TV
+                            <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', marginBottom: '24px', marginTop: '10px', flexWrap: 'wrap'}}>
+                                <a href="https://www.instagram.com/copanordesteinterclubes/" target="_blank" rel="noopener noreferrer" style={{background: 'rgba(255,255,255,0.1)', padding: '8px 16px', borderRadius: '12px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-main)', fontWeight: 'bold', fontSize: '0.95rem'}}>
+                                    <img src="./assets/logos/logocni-ig.png" alt="Instagram CNI" style={{height: '20px', objectFit: 'contain'}} /> @copanordesteinterclubes
+                                </a>
+                                <a href="https://www.youtube.com/@GameTimeTV_25" target="_blank" rel="noopener noreferrer" style={{background: 'rgba(255,255,255,0.1)', padding: '8px 16px', borderRadius: '12px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-main)', fontWeight: 'bold', fontSize: '0.95rem'}}>
+                                    <img src="./assets/logos/gametimetv.png" alt="Game Time TV" style={{height: '20px', objectFit: 'contain'}} /> Game Time TV
                                 </a>
                             </div>
                             <div>
