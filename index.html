@@ -462,24 +462,24 @@
         }
 
         .stream-dot {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             width: 28px;
             height: 28px;
             border-radius: 50%;
-            background: rgba(255, 0, 0, 0.2);
-            border: 2px solid red;
+            font-size: 12px;
+            background: rgba(220, 38, 38, 0.2);
+            border: 2px solid var(--danger);
             cursor: pointer;
             position: relative;
             animation: pulseStream 2s infinite;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
         }
 
         @keyframes pulseStream {
-            0% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
+            0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6); }
+            70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
         }
 
         .stream-popup {
@@ -487,15 +487,37 @@
             top: 100%;
             right: 0;
             background: #131420;
-            border: 1px solid red;
+            border: 2px solid var(--danger);
+            border-radius: 12px;
+            padding: 12px;
             width: 340px;
             z-index: 10000;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.9);
             cursor: pointer;
-            border-radius: 8px;
-            margin-top: 14px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            display: flex;
-            flex-direction: column;
+        }
+
+        .stream-popup::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            right: 20px;
+            border-width: 8px;
+            border-style: solid;
+            border-color: transparent transparent var(--danger) transparent;
+        }
+
+        @media (max-width: 768px) {
+            .stream-popup {
+                right: auto;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 280px;
+            }
+            .stream-popup::before {
+                right: auto;
+                left: 50%;
+                transform: translateX(-50%);
+            }
         }
 
         .stream-popup::after {
@@ -599,23 +621,23 @@
                 { id: 40, category: 'U17', group: 'DISP. 11º/13º', day: '03/04', time: '18H30', venue: 'JORGE TAVARES', homeTeam: '11º RANKING', awayTeam: '13º RANKING', phase: 'classification' },
 
                 // Dia 04/04 - Sábado
-                { id: 41, category: 'U17', group: 'DISP. 8º/10º', day: '04/04', time: '08H00', venue: 'INSTITUTO BRASIL', homeTeam: '9º RANKING', awayTeam: '10º RANKING', phase: 'classification' },
-                { id: 42, category: 'U13', group: 'DISP. 5º/7º', day: '04/04', time: '09H30', venue: 'INSTITUTO BRASIL', homeTeam: '6º RANKING', awayTeam: '7º RANKING', phase: 'classification' },
-                { id: 43, category: 'U13', group: 'SF1', day: '04/04', time: '11H00', venue: 'INSTITUTO BRASIL', homeTeam: '1º A', awayTeam: '2º B', phase: 'playoffs' },
-                { id: 44, category: 'U13', group: 'SF2', day: '04/04', time: '12H30', venue: 'INSTITUTO BRASIL', homeTeam: '1º B', awayTeam: '2º A', phase: 'playoffs' },
-                { id: 45, category: 'U17', group: 'SF1', day: '04/04', time: '14H00', venue: 'INSTITUTO BRASIL', homeTeam: '1º A', awayTeam: '1º D', phase: 'playoffs' },
-                { id: 46, category: 'U17', group: 'SF2', day: '04/04', time: '15H30', venue: 'INSTITUTO BRASIL', homeTeam: '1º B', awayTeam: '1º C', phase: 'playoffs' },
-                { id: 47, category: 'U17', group: 'DISP. 5º/7º', day: '04/04', time: '08H00', venue: 'IFRN PARNAMIRIM', homeTeam: '5º RANKING', awayTeam: '7º RANKING', phase: 'classification' },
-                { id: 48, category: 'U15', group: 'DISP. 5º/7º', day: '04/04', time: '09H30', venue: 'IFRN PARNAMIRIM', homeTeam: '6º RANKING', awayTeam: '7º RANKING', phase: 'classification' },
-                { id: 49, category: 'U17', group: 'DISP. 5º/7º', day: '04/04', time: '11H30', venue: 'IFRN PARNAMIRIM', homeTeam: '6º RANKING', awayTeam: '7º RANKING', phase: 'classification' },
-                { id: 50, category: 'U13', group: 'DISP. 5º/7º', day: '04/04', time: '13H00', venue: 'IFRN PARNAMIRIM', homeTeam: '5º RANKING', awayTeam: '6º RANKING', phase: 'classification' },
-                { id: 51, category: 'U17', group: 'DISP. 5º/7º', day: '04/04', time: '15H00', venue: 'IFRN PARNAMIRIM', homeTeam: '5º RANKING', awayTeam: '6º RANKING', phase: 'classification' },
-                { id: 52, category: 'U17', group: 'DISP. 11º/13º', day: '04/04', time: '08H00', venue: 'JORGE TAVARES', homeTeam: '12º RANKING', awayTeam: '13º RANKING', phase: 'classification' },
-                { id: 53, category: 'U15', group: 'DISP. 8º/9º', day: '04/04', time: '09H30', venue: 'JORGE TAVARES', homeTeam: '9º RANKING', awayTeam: '8º RANKING', phase: 'classification' },
-                { id: 54, category: 'U15', group: 'DISP. 5º/7º', day: '04/04', time: '14H00', venue: 'JORGE TAVARES', homeTeam: '5º RANKING', awayTeam: '6º RANKING', phase: 'classification' },
-                { id: 55, category: 'U17', group: 'DISP. 8º/10º', day: '04/04', time: '12H30', venue: 'JORGE TAVARES', homeTeam: '8º RANKING', awayTeam: '9º RANKING', phase: 'classification' },
-                { id: 56, category: 'U17', group: 'DISP. 11º/13º', day: '04/04', time: '11H00', venue: 'JORGE TAVARES', homeTeam: '11º RANKING', awayTeam: '12º RANKING', phase: 'classification' },
-                { id: 57, category: 'U15', group: 'DISP. 8º/9º', day: '04/04', time: '15H30', venue: 'JORGE TAVARES', homeTeam: '8º RANKING', awayTeam: '9º RANKING', phase: 'classification' },
+                { id: 41, category: 'U17', group: 'DISP. 8º/10º', day: '04/04', time: '08H00', venue: 'INSTITUTO BRASIL', homeTeam: 'ELITE (RN)', awayTeam: 'DRG MOSSORÓ (RN)', phase: 'classification' },
+                { id: 42, category: 'U13', group: 'DISP. 5º/7º', day: '04/04', time: '09H30', venue: 'INSTITUTO BRASIL', homeTeam: 'DRG (RN)', awayTeam: 'AEROCLUBE (RN)', phase: 'classification' },
+                { id: 43, category: 'U13', group: 'SF1', day: '04/04', time: '11H00', venue: 'INSTITUTO BRASIL', homeTeam: 'BASQ. PARAÍBA (PB)', awayTeam: 'SPORT RECIFE (PE)', phase: 'playoffs' },
+                { id: 44, category: 'U13', group: 'SF2', day: '04/04', time: '12H30', venue: 'INSTITUTO BRASIL', homeTeam: 'MARECHAIS (AL)', awayTeam: 'AADB (PE)', phase: 'playoffs' },
+                { id: 45, category: 'U17', group: 'SF1', day: '04/04', time: '14H00', venue: 'INSTITUTO BRASIL', homeTeam: 'SPORT RECIFE (PE)', awayTeam: 'AEROCLUBE 1 (RN)', phase: 'playoffs' },
+                { id: 46, category: 'U17', group: 'SF2', day: '04/04', time: '15H30', venue: 'INSTITUTO BRASIL', homeTeam: 'FITCAMP (PE)', awayTeam: 'MARECHAIS (AL)', phase: 'playoffs' },
+                { id: 47, category: 'U17', group: 'DISP. 5º/7º', day: '04/04', time: '08H00', venue: 'IFRN PARNAMIRIM', homeTeam: 'DRG 1 (RN)', awayTeam: 'BNB (CE)', phase: 'classification' },
+                { id: 48, category: 'U15', group: 'DISP. 5º/7º', day: '04/04', time: '09H30', venue: 'IFRN PARNAMIRIM', homeTeam: 'DRG 2 (RN)', awayTeam: 'AEROCLUBE (RN)', phase: 'classification' },
+                { id: 49, category: 'U17', group: 'DISP. 5º/7º', day: '04/04', time: '11H30', venue: 'IFRN PARNAMIRIM', homeTeam: 'RA10 (CE)', awayTeam: 'BNB (CE)', phase: 'classification' },
+                { id: 50, category: 'U13', group: 'DISP. 5º/7º', day: '04/04', time: '13H00', venue: 'IFRN PARNAMIRIM', homeTeam: 'I. C. PAJUSSARA (AL)', awayTeam: 'DRG (RN)', phase: 'classification' },
+                { id: 51, category: 'U17', group: 'DISP. 5º/7º', day: '04/04', time: '15H00', venue: 'IFRN PARNAMIRIM', homeTeam: 'DRG 1 (RN)', awayTeam: 'RA10 (CE)', phase: 'classification' },
+                { id: 52, category: 'U17', group: 'DISP. 11º/13º', day: '04/04', time: '08H00', venue: 'JORGE TAVARES', homeTeam: 'AEROCLUBE 2 (RN)', awayTeam: 'FÊNIX GOIANINHA (RN)', phase: 'classification' },
+                { id: 53, category: 'U15', group: 'DISP. 8º/9º', day: '04/04', time: '09H30', venue: 'JORGE TAVARES', homeTeam: 'AADB 2 (PE)', awayTeam: 'I.C. PAJUSSARA (AL)', phase: 'classification' },
+                { id: 54, category: 'U17', group: 'DISP. 11º/13º', day: '04/04', time: '11H00', venue: 'JORGE TAVARES', homeTeam: 'I.C. PAJUSSARA (AL)', awayTeam: 'AEROCLUBE 2 (RN)', phase: 'classification' },
+                { id: 55, category: 'U17', group: 'DISP. 8º/10º', day: '04/04', time: '12H30', venue: 'JORGE TAVARES', homeTeam: 'DRG 2 (RN)', awayTeam: 'ELITE (RN)', phase: 'classification' },
+                { id: 56, category: 'U15', group: 'DISP. 5º/7º', day: '04/04', time: '14H00', venue: 'JORGE TAVARES', homeTeam: 'DRG 1 (RN)', awayTeam: 'DRG 2 (RN)', phase: 'classification' },
+                { id: 57, category: 'U15', group: 'DISP. 8º/9º', day: '04/04', time: '15H30', venue: 'JORGE TAVARES', homeTeam: 'I.C. PAJUSSARA (AL)', awayTeam: 'AADB 2 (PE)', phase: 'classification' },
 
                 // Dia 05/04 - Domingo
                 { id: 58, category: 'U13', group: '3º/4º', day: '05/04', time: '08H00', venue: 'INSTITUTO BRASIL', homeTeam: 'PERD. SF1', awayTeam: 'PERD. SF2', phase: 'finals' },
@@ -940,106 +962,27 @@
             };
 
             const dynamicGames = useMemo(() => {
-                 const cloned = games.map(g => ({...g}));
-                 ['U13', 'U15', 'U17'].forEach(cat => {
-                    const groupGames = cloned.filter(g => g.category === cat && g.phase === 'groups');
-                    const allGroupsCompleted = groupGames.length > 0 && groupGames.every(g => g.status === 'completed');
-
-                    let sf1Home = '1º A', sf1Away = '2º B';
-                    let sf2Home = '1º B', sf2Away = '2º A';
-
-                    if (cat === 'U15') { sf1Away = 'MELHOR 2º'; sf2Away = '1º C'; }
-                    if (cat === 'U17') { sf1Away = '1º D'; sf2Away = '1º C'; }
-
-                    let nonQualifiers = [];
-
-                    if (allGroupsCompleted) {
-                        const stdA = calculateStandings(cat, 'A');
-                        const stdB = calculateStandings(cat, 'B');
-
-                        if (cat === 'U13') {
-                            sf1Home = stdA[0]?.team || sf1Home; sf1Away = stdB[1]?.team || sf1Away;
-                            sf2Home = stdB[0]?.team || sf2Home; sf2Away = stdA[1]?.team || sf2Away;
-                            // Não classificados: 3º e 4º do grupo A, 3º do grupo B
-                            if (stdA[2]) nonQualifiers.push({team: stdA[2].team, pos: 3, PTS: stdA[2].PTS, SDO: stdA[2].SDO, CPO: stdA[2].CPO});
-                            if (stdA[3]) nonQualifiers.push({team: stdA[3].team, pos: 4, PTS: stdA[3].PTS, SDO: stdA[3].SDO, CPO: stdA[3].CPO});
-                            if (stdB[2]) nonQualifiers.push({team: stdB[2].team, pos: 3, PTS: stdB[2].PTS, SDO: stdB[2].SDO, CPO: stdB[2].CPO});
-                        } else if (cat === 'U15') {
-                            const stdC = calculateStandings(cat, 'C');
-                            sf1Home = stdA[0]?.team || sf1Home;
-                            sf2Home = stdB[0]?.team || sf2Home;
-                            sf2Away = stdC[0]?.team || sf2Away;
-
-                            const seconds = [stdA[1], stdB[1], stdC[1]].filter(Boolean);
-                            seconds.sort((a, b) => {
-                                if (b.PTS !== a.PTS) return b.PTS - a.PTS;
-                                if (b.SDO !== a.SDO) return b.SDO - a.SDO;
-                                return b.CPO - a.CPO;
-                            });
-                            sf1Away = seconds[0]?.team || sf1Away;
-                            // Não classificados: 2os não-melhores + todos os 3os
-                            seconds.slice(1).forEach(t => { if (t) nonQualifiers.push({team: t.team, pos: 2, PTS: t.PTS, SDO: t.SDO, CPO: t.CPO}); });
-                            if (stdA[2]) nonQualifiers.push({team: stdA[2].team, pos: 3, PTS: stdA[2].PTS, SDO: stdA[2].SDO, CPO: stdA[2].CPO});
-                            if (stdB[2]) nonQualifiers.push({team: stdB[2].team, pos: 3, PTS: stdB[2].PTS, SDO: stdB[2].SDO, CPO: stdB[2].CPO});
-                            if (stdC[2]) nonQualifiers.push({team: stdC[2].team, pos: 3, PTS: stdC[2].PTS, SDO: stdC[2].SDO, CPO: stdC[2].CPO});
-                        } else if (cat === 'U17') {
-                            const stdC = calculateStandings(cat, 'C');
-                            const stdD = calculateStandings(cat, 'D');
-                            sf1Home = stdA[0]?.team || sf1Home; sf1Away = stdD[0]?.team || sf1Away;
-                            sf2Home = stdB[0]?.team || sf2Home; sf2Away = stdC[0]?.team || sf2Away;
-                            // Não classificados: 2os-4os do A, 2os-3os de B/C/D
-                            if (stdA[1]) nonQualifiers.push({team: stdA[1].team, pos: 2, PTS: stdA[1].PTS, SDO: stdA[1].SDO, CPO: stdA[1].CPO});
-                            if (stdA[2]) nonQualifiers.push({team: stdA[2].team, pos: 3, PTS: stdA[2].PTS, SDO: stdA[2].SDO, CPO: stdA[2].CPO});
-                            if (stdA[3]) nonQualifiers.push({team: stdA[3].team, pos: 4, PTS: stdA[3].PTS, SDO: stdA[3].SDO, CPO: stdA[3].CPO});
-                            if (stdB[1]) nonQualifiers.push({team: stdB[1].team, pos: 2, PTS: stdB[1].PTS, SDO: stdB[1].SDO, CPO: stdB[1].CPO});
-                            if (stdB[2]) nonQualifiers.push({team: stdB[2].team, pos: 3, PTS: stdB[2].PTS, SDO: stdB[2].SDO, CPO: stdB[2].CPO});
-                            if (stdC[1]) nonQualifiers.push({team: stdC[1].team, pos: 2, PTS: stdC[1].PTS, SDO: stdC[1].SDO, CPO: stdC[1].CPO});
-                            if (stdC[2]) nonQualifiers.push({team: stdC[2].team, pos: 3, PTS: stdC[2].PTS, SDO: stdC[2].SDO, CPO: stdC[2].CPO});
-                            if (stdD[1]) nonQualifiers.push({team: stdD[1].team, pos: 2, PTS: stdD[1].PTS, SDO: stdD[1].SDO, CPO: stdD[1].CPO});
-                            if (stdD[2]) nonQualifiers.push({team: stdD[2].team, pos: 3, PTS: stdD[2].PTS, SDO: stdD[2].SDO, CPO: stdD[2].CPO});
-                        }
-                        // Ordena não-classificados: posição no grupo → PTS → SDO → CPO
-                        nonQualifiers.sort((a, b) => {
-                            if (a.pos !== b.pos) return a.pos - b.pos;
-                            if (b.PTS !== a.PTS) return b.PTS - a.PTS;
-                            if (b.SDO !== a.SDO) return b.SDO - a.SDO;
-                            return b.CPO - a.CPO;
-                        });
-                    }
-
+                const cloned = games.map(g => ({...g}));
+                ['U13', 'U15', 'U17'].forEach(cat => {
                     const sf1Game = cloned.find(g => g.category === cat && g.group === 'SF1');
                     const sf2Game = cloned.find(g => g.category === cat && g.group === 'SF2');
                     const finalGame = cloned.find(g => g.category === cat && g.group === 'FINAL');
                     const thirdGame = cloned.find(g => g.category === cat && g.group === '3º/4º');
 
-                    if (sf1Game) { sf1Game.homeTeam = sf1Home; sf1Game.awayTeam = sf1Away; }
-                    if (sf2Game) { sf2Game.homeTeam = sf2Home; sf2Game.awayTeam = sf2Away; }
-
                     let finalHome = 'VENC. SF1', finalAway = 'VENC. SF2';
                     let thirdHome = 'PERD. SF1', thirdAway = 'PERD. SF2';
                     if (sf1Game?.status === 'completed') {
-                        finalHome = sf1Game.homeScore > sf1Game.awayScore ? sf1Home : sf1Away;
-                        thirdHome = sf1Game.homeScore > sf1Game.awayScore ? sf1Away : sf1Home;
+                        finalHome = sf1Game.homeScore > sf1Game.awayScore ? sf1Game.homeTeam : sf1Game.awayTeam;
+                        thirdHome = sf1Game.homeScore > sf1Game.awayScore ? sf1Game.awayTeam : sf1Game.homeTeam;
                     }
                     if (sf2Game?.status === 'completed') {
-                        finalAway = sf2Game.homeScore > sf2Game.awayScore ? sf2Home : sf2Away;
-                        thirdAway = sf2Game.homeScore > sf2Game.awayScore ? sf2Away : sf2Home;
+                        finalAway = sf2Game.homeScore > sf2Game.awayScore ? sf2Game.homeTeam : sf2Game.awayTeam;
+                        thirdAway = sf2Game.homeScore > sf2Game.awayScore ? sf2Game.awayTeam : sf2Game.homeTeam;
                     }
-
                     if (finalGame) { finalGame.homeTeam = finalHome; finalGame.awayTeam = finalAway; }
                     if (thirdGame) { thirdGame.homeTeam = thirdHome; thirdGame.awayTeam = thirdAway; }
-
-                    // Resolve os nomes nas disputas de classificação (5º em diante)
-                    if (nonQualifiers.length > 0) {
-                        const rankMap = {};
-                        nonQualifiers.forEach((nq, idx) => { rankMap[`${idx + 5}º RANKING`] = nq.team; });
-                        cloned.filter(g => g.category === cat && g.phase === 'classification').forEach(g => {
-                            if (rankMap[g.homeTeam]) g.homeTeam = rankMap[g.homeTeam];
-                            if (rankMap[g.awayTeam]) g.awayTeam = rankMap[g.awayTeam];
-                        });
-                    }
-                 });
-                 return cloned;
+                });
+                return cloned;
             }, [games]);
 
             const categoryGames = dynamicGames.filter(g => selectedCategories.includes(g.category));
@@ -1097,7 +1040,11 @@
                         arr.forEach(p => {
                             if (!p || !p.name || !p.points) return;
                             const pName = p.name.trim().toUpperCase();
-                            const pTeam = p.team || 'Desconhecido';
+                            let pTeam = p.team;
+                            if (!pTeam || pTeam.trim() === '' || pTeam === 'Desconhecido') {
+                                if (g.homeTeam.includes('AADB 1') || g.awayTeam.includes('AADB 1')) pTeam = 'AADB 1 (PE)';
+                                else pTeam = 'Desconhecido';
+                            }
                             const pKey = `${pName}_${pTeam}_${g.category}`;
                             if (!map[pKey]) {
                                 map[pKey] = { name: pName, number: p.number, team: pTeam, cat: g.category, points: 0 };
@@ -1583,7 +1530,12 @@
                                     </div>
                                 ) : (
                                     <div className="games-list">
-                                        {filteredGames.map(game => {
+                                        {filteredGames.sort((a, b) => {
+                                            const dayA = a.day.split('/').reverse().join('');
+                                            const dayB = b.day.split('/').reverse().join('');
+                                            if (dayA !== dayB) return dayA.localeCompare(dayB);
+                                            return (a.time || '').localeCompare(b.time || '');
+                                        }).map(game => {
                                             const isStreamVenue = game.venue.includes('INSTITUTO BRASIL') || game.venue.includes('JORGE TAVARES');
                                             return (
                                             <div key={game.id} className={`game-card glass-panel ${game.status === 'completed' ? 'completed' : ''}`}>
@@ -1603,25 +1555,23 @@
                                                         )}
                                                         <span className="badge" style={{background: 'var(--golden-yellow)', color: 'black'}}>{game.category}</span>
                                                     </div>
-                                                    {game.status === 'live' && isStreamVenue && (
-                                                        <div 
-                                                            style={{position: 'relative', marginLeft: 'auto'}}
-                                                            onMouseEnter={() => setActiveStream(game.id)} 
-                                                            onMouseLeave={() => setActiveStream(null)} 
-                                                            onClick={e => { e.stopPropagation(); setActiveStream(activeStream === game.id ? null : game.id); }}
-                                                        >
-                                                            <span className="stream-dot">▶️</span>
-                                                            {activeStream === game.id && (
-                                                                <div className="stream-popup" onClick={(e) => { e.stopPropagation(); window.open('https://www.youtube.com/@GameTimeTV_25', '_blank'); }}>
-                                                                    <div style={{padding: '12px', fontWeight: 'bold', color: 'white', textAlign: 'center', borderBottom: '1px solid rgba(255,0,0,0.3)', fontFamily: 'Bebas Neue', fontSize: '1.2rem', letterSpacing: '1px'}}>🔴 ASSISTIR GAME TIME TV</div>
-                                                                    <div style={{padding: '0'}}>
-                                                                        <iframe 
-                                                                            style={{width: '100%', aspectRatio: '16/9', border: 'none', pointerEvents: 'none'}} 
-                                                                            src={"https://www.youtube.com/embed/live_stream?channel=" + YOUTUBE_CHANNEL_ID + "&autoplay=1&mute=1"} 
-                                                                            allow="autoplay"
-                                                                        ></iframe>
-                                                                    </div>
-                                                                    <div style={{padding: '10px', fontSize: '0.85rem', color: 'var(--text-main)', textAlign: 'center', borderTop: '1px solid rgba(255,0,0,0.3)'}}>Clique para abrir o canal no YouTube</div>
+                                                    {isStreamVenue && (
+                                                        <div style={{marginLeft: 'auto', display: 'flex', alignItems: 'center'}}>
+                                                            {game.status === 'pending' && (
+                                                                <span className="badge" style={{background: 'rgba(255,255,255,0.1)', color: 'var(--text-muted)', border: '1px solid var(--glass-border)', display: 'flex', gap: '6px'}}><img src="./assets/logos/gametimetv.png" alt="TV" style={{height: '14px', objectFit: 'contain'}} /> Agendada</span>
+                                                            )}
+                                                            {game.status === 'live' && (
+                                                                <div style={{position: 'relative', display: 'inline-flex'}} onMouseEnter={() => setActiveStream(game.id)} onMouseLeave={() => setActiveStream(null)} onClick={() => setActiveStream(activeStream === game.id ? null : game.id)}>
+                                                                    <span className="stream-dot">▶️</span>
+                                                                    {activeStream === game.id && (
+                                                                        <div className="stream-popup" onClick={() => window.open(`https://www.youtube.com/@GameTimeTV_25`, '_blank')}>
+                                                                            <div style={{fontSize: '0.85rem', color: '#fff', marginBottom: '8px', textAlign: 'center', fontWeight: 'bold'}}>🔴 ASSISTIR GAME TIME TV</div>
+                                                                            <div style={{position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: '8px', pointerEvents: 'none'}}>
+                                                                                <iframe style={{position: 'absolute', top: 0, left: 0, width: '100%', height: '100%'}} src={`https://www.youtube.com/embed/live_stream?channel=${YOUTUBE_CHANNEL_ID}&autoplay=1&mute=1`} frameBorder="0" allowFullScreen></iframe>
+                                                                            </div>
+                                                                            <div style={{background: 'var(--danger)', color: 'white', textAlign: 'center', padding: '8px', borderRadius: '8px', marginTop: '8px', fontSize: '0.9rem', fontWeight: 'bold'}}>Abrir Canal em Nova Guia</div>
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             )}
                                                         </div>
