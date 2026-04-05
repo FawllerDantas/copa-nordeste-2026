@@ -11,7 +11,6 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -545,7 +544,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const YOUTUBE_LIVE_VIDEO_ID = 'phKTmn52CoE';
+        const YOUTUBE_LIVE_VIDEO_ID = 'IcpHmdy75uk';
         // CONFIGURAÇÃO DO SUPABASE
         const SUPABASE_URL = 'https://sgbrwoyygbycizvfwhkb.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_ktRyOlwOGl2JcuwkRzYx3A_zd9NIlKF';
@@ -663,11 +662,8 @@
 
         const showToast = (message) => {
             const toast = document.createElement('div');
-            toast.className = 'toast glass-panel';
-            const icon = document.createElement('span');
-            icon.textContent = '⚡';
-            toast.appendChild(icon);
-            toast.appendChild(document.createTextNode(' ' + message));
+            toast.className = `toast glass-panel`;
+            toast.innerHTML = `<span>⚡</span> ${message}`;
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 3000);
         };
@@ -1214,6 +1210,7 @@
                 });
 
                 const sortedPts = Object.entries(stats).sort((a,b) => b[1].cpo - a[1].cpo);
+                const sortedVit = Object.entries(stats).sort((a,b) => b[1].vit - a[1].vit);
                 const sortedDef = Object.entries(stats).sort((a,b) => a[1].cco - b[1].cco);
                 
                 const allMvps = Object.values(mvpStatsMap);
@@ -1869,8 +1866,7 @@
                                                         </div>
                                                         {catsToRender.map(cat => {
                                                             const source = isShooter ? allStats.snipersByClubCat : allStats.playersByClubCat;
-                                                            const allPlayers = source[team][cat];
-                                                            const players = statsTeam === 'all' ? allPlayers.filter(p => p.clubRank === 1) : allPlayers;
+                                                            const players = source[team][cat];
 
                                                             return (
                                                                 <div key={cat} style={{marginBottom: '20px'}}>
@@ -2067,18 +2063,7 @@
                                                                 {finalRank.map((r, idx) => (
                                                                     <tr key={idx}>
                                                                         <td style={{fontWeight: 'bold', color: r.pos <= 3 ? 'var(--golden-yellow)' : 'var(--text-muted)'}}>{r.pos}º</td>
-                                                                        <td
-                                                                            className="team-name"
-                                                                            style={{display: 'flex', alignItems: 'center', gap: '10px'}}
-                                                                            onMouseEnter={r.pos === 1 ? (e) => {
-                                                                                const rect = e.currentTarget.getBoundingClientRect();
-                                                                                const x = (rect.left + rect.width / 2) / window.innerWidth;
-                                                                                const y = (rect.top + rect.height / 2) / window.innerHeight;
-                                                                                if (window.confetti) window.confetti({ particleCount: 130, spread: 80, origin: { x, y }, colors: ['#FFC72C', '#1D428A', '#ffffff', '#48bb78'] });
-                                                                            } : undefined}
-                                                                        >
-                                                                            <TeamLogo team={r.team} size={30} /> {r.team}
-                                                                        </td>
+                                                                        <td className="team-name" style={{display: 'flex', alignItems: 'center', gap: '10px'}}><TeamLogo team={r.team} size={30} /> {r.team}</td>
                                                                     </tr>
                                                                 ))}
                                                             </tbody>
@@ -2093,7 +2078,7 @@
                                     <>
                                         <h3 style={{color: 'var(--text-main)', marginBottom: '15px', marginTop: '40px', width: '100%', maxWidth: '900px', textAlign: 'center'}}>🌟 Ranking Geral: Cestinhas por Categoria</h3>
                                         <div className="bento-grid" style={{marginBottom: '30px', width: '100%', maxWidth: '900px'}}>
-                                            {Object.keys(allStats.playersByCategory).sort().filter(cat => selectedCategories.includes(cat)).map(cat => (
+                                            {Object.keys(allStats.playersByCategory).sort().map(cat => (
                                                 <div key={cat} className="card glass-panel" style={{flex: 1, minWidth: '300px'}}>
                                                     <h2 style={{color: 'var(--golden-yellow)'}}>🏆 Cestinhas {cat}</h2>
                                                     <table>
@@ -2124,9 +2109,9 @@
                                     <>
                                         <h3 style={{color: '#38bdf8', marginBottom: '15px', marginTop: '30px', width: '100%', maxWidth: '900px', textAlign: 'center'}}>🎯 Ranking Geral: Shooters por Categoria</h3>
                                         <div className="bento-grid" style={{marginBottom: '30px', width: '100%', maxWidth: '900px'}}>
-                                            {Object.keys(allStats.snipersByCategory).sort().filter(cat => selectedCategories.includes(cat)).map(cat => (
+                                            {Object.keys(allStats.snipersByCategory).sort().map(cat => (
                                                 <div key={cat} className="card glass-panel" style={{flex: 1, minWidth: '300px', borderColor: 'rgba(56,189,248,0.2)'}}>
-                                                    <h2 style={{color: '#38bdf8'}}>🎯 Ranking Shooters {cat}</h2>
+                                                    <h2 style={{color: '#38bdf8'}}>🎯 Rank Shooters {cat}</h2>
                                                     <table>
                                                         <thead><tr><th style={{width: '30px'}}>#</th><th>Atleta / Clube</th><th className="stat-cell" style={{width: '90px'}}>CESTAS DE 3PTS</th></tr></thead>
                                                         <tbody>
@@ -2154,37 +2139,36 @@
 
                         {view === 'allstar' && (
                             <div className="allstar-container">
-                                {!isAdmin ? (
-                                    <div className="bento-grid">
+                                {isAdmin && (
+                                    <div className="card glass-panel" style={{marginBottom: '20px', borderColor: 'var(--success)'}}>
+                                        <h2 style={{color: 'var(--success)'}}>🛠️ Adicionar Evento (Admin)</h2>
+                                        <div style={{display: 'flex', gap: '10px'}}>
+                                            <input id="newEventTitle" placeholder="Título (ex: Torneio de Enterradas)" style={{flex: 1, padding: '10px', borderRadius: '8px', border: 'none'}} />
+                                            <button className="btn btn-primary" onClick={async () => {
+                                                const title = document.getElementById('newEventTitle').value;
+                                                if (!title) return;
+                                                const newEvt = { id: Date.now(), title, athletes: [] };
+                                                const { error } = await supabaseClient.from('all_star_events').upsert({ id: newEvt.id, title: newEvt.title, athletes: newEvt.athletes });
+                                                if (!error) { setAllStarEvents([...allStarEvents, newEvt].sort((a,b)=>a.id-b.id)); document.getElementById('newEventTitle').value = ''; }
+                                            }}>Criar</button>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                <div className="bento-grid">
+                                    {allStarEvents.length === 0 && !isAdmin && (
                                         <div className="card glass-panel" style={{gridColumn: '1 / -1', textAlign: 'center', padding: '60px 24px', borderColor: 'rgba(255,199,44,0.3)'}}>
                                             <div style={{fontSize: '4rem', marginBottom: '20px', filter: 'drop-shadow(0 4px 12px rgba(255,199,44,0.4))'}}>🏀</div>
                                             <h2 style={{color: 'var(--golden-yellow)', fontSize: '2rem', marginBottom: '12px', borderBottom: 'none'}}>All-Star 2026</h2>
                                             <p style={{color: 'var(--text-muted)', fontSize: '1.05rem', maxWidth: '480px', margin: '0 auto', lineHeight: '1.7'}}>
-                                                Em breve — o All-Star será anunciado após a 1ª Etapa.
+                                                Conteúdo em breve — o All-Star será anunciado após a 1ª Etapa.
                                             </p>
                                             <div style={{marginTop: '28px', display: 'inline-flex', gap: '8px', alignItems: 'center', background: 'rgba(255,199,44,0.08)', border: '1px solid rgba(255,199,44,0.2)', borderRadius: '12px', padding: '10px 20px'}}>
                                                 <span style={{color: 'var(--golden-yellow)', fontSize: '0.9rem', fontWeight: 600}}>Fique ligado nas novidades</span>
                                                 <span style={{fontSize: '1rem'}}>⭐</span>
                                             </div>
                                         </div>
-                                    </div>
-                                ) : (
-                                <>
-                                <div className="card glass-panel" style={{marginBottom: '20px', borderColor: 'var(--success)'}}>
-                                    <h2 style={{color: 'var(--success)'}}>🛠️ Adicionar Evento (Admin)</h2>
-                                    <div style={{display: 'flex', gap: '10px'}}>
-                                        <input id="newEventTitle" placeholder="Título (ex: Torneio de Enterradas)" style={{flex: 1, padding: '10px', borderRadius: '8px', border: 'none'}} />
-                                        <button className="btn btn-primary" onClick={async () => {
-                                            const title = document.getElementById('newEventTitle').value;
-                                            if (!title) return;
-                                            const newEvt = { id: Date.now(), title, athletes: [] };
-                                            const { error } = await supabaseClient.from('all_star_events').upsert({ id: newEvt.id, title: newEvt.title, athletes: newEvt.athletes });
-                                            if (!error) { setAllStarEvents([...allStarEvents, newEvt].sort((a,b)=>a.id-b.id)); document.getElementById('newEventTitle').value = ''; }
-                                        }}>Criar</button>
-                                    </div>
-                                </div>
-
-                                <div className="bento-grid">
+                                    )}
                                     {allStarEvents.map((evt) => (
                                         <div key={evt.id} className="card glass-panel" style={{flex: 1, minWidth: '320px'}}>
                                             <h2 style={{color: 'var(--golden-yellow)'}}>🌟 {evt.title}</h2>
@@ -2241,8 +2225,6 @@
                                         </div>
                                     ))}
                                 </div>
-                                </>
-                                )}
                             </div>
                         )}
 
@@ -2256,7 +2238,7 @@
                                 </a>
                             </div>
                             <div style={{display: 'flex', justifyContent: 'center', marginBottom: '20px'}}>
-                                <a href="https://www.youtube.com/live/phKTmn52CoE?si=t62lPjmy1Du-Dhsx" target="_blank" rel="noopener noreferrer" style={{background: '#131420', color: 'var(--golden-yellow)', border: '1px solid var(--golden-yellow)', fontWeight: '700', borderRadius: '12px', padding: '10px 20px', display: 'flex', gap: '8px', alignItems: 'center', textDecoration: 'none'}}>
+                                <a href="https://www.youtube.com/@GameTimeTV_25" target="_blank" rel="noopener noreferrer" style={{background: '#131420', color: 'var(--golden-yellow)', border: '1px solid var(--golden-yellow)', fontWeight: '700', borderRadius: '12px', padding: '10px 20px', display: 'flex', gap: '8px', alignItems: 'center', textDecoration: 'none'}}>
                                     Assista ao Vivo pelo Canal <img src="./assets/logos/gametimetv.png" alt="Game Time TV" style={{height: '24px', objectFit: 'contain', margin: '0 8px'}}/> Game Time TV
                                 </a>
                             </div>
