@@ -720,6 +720,10 @@
             const [journeyCat, setJourneyCat] = useState('U13');
             const [journeyTeam, setJourneyTeam] = useState('all');
 
+            const [statsCat, setStatsCat] = useState('all');
+            const [statsTeam, setStatsTeam] = useState('all');
+            const [statsType, setStatsType] = useState('cestinhas');
+
             const [filterDay, setFilterDay] = useState('all');
             const [filterVenue, setFilterVenue] = useState('all');
             const [filterStatus, setFilterStatus] = useState('all');
@@ -1249,7 +1253,6 @@
                     Object.keys(snipersByClubCat[team]).forEach(cat => snipersByClubCat[team][cat].sort((a, b) => b.points - a.points));
                 });
 
-                // Lógica de Ranking Denso para processar os empates separando globalRank e clubRank
                 const applyDenseRanking = (arr, rankField) => {
                     let rank = 1;
                     arr.forEach((p, i) => {
@@ -1257,7 +1260,7 @@
                         p[rankField] = rank;
                     });
                 };
-                
+
                 Object.values(playersByCategory).forEach(arr => applyDenseRanking(arr, 'globalRank'));
                 Object.values(snipersByCategory).forEach(arr => applyDenseRanking(arr, 'globalRank'));
                 Object.keys(playersByClubCat).forEach(team => Object.values(playersByClubCat[team]).forEach(arr => applyDenseRanking(arr, 'clubRank')));
@@ -1818,122 +1821,80 @@
                                     </div>
                                 </div>
 
-                                {/* 1. MAIORES CESTINHAS DA COMPETIÇÃO */}
+                                {/* ESTATÍSTICAS FILTRADAS POR CLUBE, CATEGORIA E TIPO */}
                                 {allStats.playersOverall?.length > 0 && (
-                                    <>
-                                        <h3 style={{color: 'var(--text-main)', marginBottom: '15px', marginTop: '30px'}}>🌟 Ranking Geral: Cestinhas por Categoria</h3>
-                                        <div className="bento-grid" style={{marginBottom: '30px'}}>
-                                            {Object.keys(allStats.playersByCategory).sort().map(cat => (
-                                                <div key={cat} className="card glass-panel" style={{flex: 1, minWidth: '300px'}}>
-                                                    <h2 style={{color: 'var(--golden-yellow)'}}>🏆 Cestinhas {cat}</h2>
-                                                    <table>
-                                                        <thead><tr><th style={{width: '30px'}}>#</th><th>Atleta / Clube</th><th className="stat-cell" style={{width: '60px'}}>PTs</th></tr></thead>
-                                                        <tbody>
-                                                            {allStats.playersByCategory[cat].filter(p => p.globalRank === 1).map((p, idx) => (
-                                                                <tr key={idx}>
-                                                                    <td style={{fontWeight: 'bold', color: 'var(--golden-yellow)'}}>{p.globalRank}º</td>
-                                                                    <td className="team-name" style={{display: 'flex', alignItems: 'center', gap: '10px', whiteSpace: 'normal', lineHeight: 1.2}}><TeamLogo team={p.team} size={35} />
-                                                                        <div style={{display: 'flex', flexDirection: 'column', gap: '2px'}}>
-                                                                            <span style={{fontSize: '1.1rem'}}>{p.name} <span style={{fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'Inter', fontWeight: 'normal'}}>#{p.number}</span></span>
-                                                                            <span style={{fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'Inter', fontWeight: 'normal'}}>{p.team}</span>
-                                                                        </div>
-                                                                    </td>
-                                                                    <td className="stat-cell text-yellow" style={{fontSize: '1.3rem'}}>{p.points}</td>
-                                                                </tr>
-                                                            ))}
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            ))}
+                                    <div style={{marginTop: '40px', width: '100%'}}>
+                                        <div style={{marginBottom: '20px', borderBottom: '2px solid var(--golden-yellow)', paddingBottom: '10px'}}>
+                                            <h2 style={{fontSize: '2rem'}}>Estatísticas Detalhadas de Atletas</h2>
                                         </div>
-                                    </>
-                                )}
-
-                                {/* 2. MAIORES SHOOTERS DA COMPETIÇÃO */}
-                                {allStats.snipersOverall?.length > 0 && (
-                                    <>
-                                        <h3 style={{color: '#38bdf8', marginBottom: '15px', marginTop: '30px'}}>🎯 Ranking Geral: Shooters por Categoria</h3>
-                                        <div className="bento-grid" style={{marginBottom: '30px'}}>
-                                            {Object.keys(allStats.snipersByCategory).sort().map(cat => (
-                                                <div key={cat} className="card glass-panel" style={{flex: 1, minWidth: '300px', borderColor: 'rgba(56,189,248,0.2)'}}>
-                                                    <h2 style={{color: '#38bdf8'}}>🎯 Rank Shooters {cat}</h2>
-                                                    <table>
-                                                        <thead><tr><th style={{width: '30px'}}>#</th><th>Atleta / Clube</th><th className="stat-cell" style={{width: '90px'}}>CESTAS DE 3PTS</th></tr></thead>
-                                                        <tbody>
-                                                            {allStats.snipersByCategory[cat].filter(p => p.globalRank === 1).map((p, idx) => (
-                                                                <tr key={idx}>
-                                                                    <td style={{fontWeight: 'bold', color: '#38bdf8'}}>{p.globalRank}º</td>
-                                                                    <td className="team-name" style={{display: 'flex', alignItems: 'center', gap: '10px', whiteSpace: 'normal', lineHeight: 1.2}}><TeamLogo team={p.team} size={35} />
-                                                                        <div style={{display: 'flex', flexDirection: 'column', gap: '2px'}}>
-                                                                            <span style={{fontSize: '1.1rem'}}>{p.name} <span style={{fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'Inter', fontWeight: 'normal'}}>#{p.number}</span></span>
-                                                                            <span style={{fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'Inter', fontWeight: 'normal'}}>{p.team}</span>
-                                                                        </div>
-                                                                    </td>
-                                                                    <td className="stat-cell" style={{fontSize: '1.3rem', color: '#38bdf8', fontWeight: 'bold'}}>{p.points}</td>
-                                                                </tr>
-                                                            ))}
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            ))}
+                                        
+                                        <div className="filter-bar glass-panel" style={{display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '24px'}}>
+                                            <select className="filter-select" value={statsType} onChange={e => setStatsType(e.target.value)}>
+                                                <option value="cestinhas">🌟 Ranking de Cestinhas</option>
+                                                <option value="shooters">🎯 Ranking de Shooters</option>
+                                            </select>
+                                            <select className="filter-select" value={statsCat} onChange={e => setStatsCat(e.target.value)}>
+                                                <option value="all">🏀 Todas as Categorias</option>
+                                                <option value="U13">Categoria U13</option>
+                                                <option value="U15">Categoria U15</option>
+                                                <option value="U17">Categoria U17</option>
+                                            </select>
+                                            <select className="filter-select" value={statsTeam} onChange={e => setStatsTeam(e.target.value)}>
+                                                <option value="all">🛡️ Todos os Clubes</option>
+                                                {availableTeams.map(t => <option key={t} value={t}>{t}</option>)}
+                                            </select>
                                         </div>
-                                    </>
-                                )}
 
-                                {/* 3. ATLETAS POR CLUBE E CATEGORIA */}
-                                {allStats.playersOverall?.length > 0 && (
-                                    <>
-                                        <h3 style={{color: 'var(--text-main)', marginBottom: '15px', marginTop: '40px', borderTop: '2px solid var(--glass-border)', paddingTop: '20px'}}>🛡️ Estatísticas de Atletas por Clube</h3>
                                         <div className="bento-grid">
-                                            {Object.keys(allStats.playersByClubCat).sort().map(team => (
-                                                <div key={team} className="card glass-panel" style={{flex: 1, minWidth: '300px', padding: '20px'}}>
-                                                    <div style={{display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '10px'}}>
-                                                        <TeamLogo team={team} size={45} />
-                                                        <h2 style={{color: 'var(--text-main)', margin: 0, fontSize: '1.4rem'}}>{team}</h2>
-                                                    </div>
-                                                    {Object.keys(allStats.playersByClubCat[team]).sort().map(cat => (
-                                                        <div key={cat} style={{marginBottom: '20px'}}>
-                                                            <h4 style={{color: 'var(--golden-yellow)', marginBottom: '8px', fontSize: '1.1rem'}}>Categoria {cat}</h4>
-                                                            <table style={{marginBottom: '10px'}}>
-                                                                <tbody>
-                                                                    {allStats.playersByClubCat[team][cat].map((p, idx) => (
-                                                                        <tr key={`pts-${idx}`}>
-                                                                            <td style={{fontWeight: 'bold', color: p.clubRank === 1 ? 'var(--golden-yellow)' : 'var(--text-muted)', width: '30px'}}>{p.clubRank}º</td>
-                                                                            <td style={{whiteSpace: 'normal', lineHeight: 1.2}}>
-                                                                                <div style={{display: 'flex', flexDirection: 'column', gap: '2px'}}>
-                                                                                    <span style={{fontSize: '1.1rem', color: 'var(--text-main)'}}>{p.name} <span style={{fontSize: '0.8rem', color: 'var(--text-muted)'}}>#{p.number}</span></span>
-                                                                                    {p.clubRank === 1 && <span style={{fontSize: '0.75rem', background: 'rgba(255,199,44,0.2)', color: 'var(--golden-yellow)', padding: '2px 6px', borderRadius: '4px', width: 'fit-content'}}>Cestinha</span>}
-                                                                                </div>
-                                                                            </td>
-                                                                            <td className="stat-cell text-yellow" style={{fontSize: '1.3rem'}}>{p.points}</td>
-                                                                        </tr>
-                                                                    ))}
-                                                                </tbody>
-                                                            </table>
-                                                            {allStats.snipersByClubCat?.[team]?.[cat] && (
-                                                                <table style={{marginTop: '10px', borderTop: '1px dashed rgba(56,189,248,0.2)', paddingTop: '10px'}}>
-                                                                    <tbody>
-                                                                        {allStats.snipersByClubCat[team][cat].map((p, idx) => (
-                                                                            <tr key={`3pt-${idx}`}>
-                                                                                <td style={{fontWeight: 'bold', color: p.clubRank === 1 ? '#38bdf8' : 'var(--text-muted)', width: '30px'}}>{p.clubRank}º</td>
-                                                                                <td style={{whiteSpace: 'normal', lineHeight: 1.2}}>
-                                                                                    <div style={{display: 'flex', flexDirection: 'column', gap: '2px'}}>
-                                                                                        <span style={{fontSize: '1.1rem', color: 'var(--text-main)'}}>{p.name} <span style={{fontSize: '0.8rem', color: 'var(--text-muted)'}}>#{p.number}</span></span>
-                                                                                        {p.clubRank === 1 && <span style={{fontSize: '0.75rem', background: 'rgba(56,189,248,0.2)', color: '#38bdf8', padding: '2px 6px', borderRadius: '4px', width: 'fit-content'}}>Shooter</span>}
-                                                                                    </div>
-                                                                                </td>
-                                                                                <td className="stat-cell" style={{fontSize: '1.3rem', color: '#38bdf8'}}>{p.points} <span style={{fontSize:'0.8rem'}}>3PT</span></td>
-                                                                            </tr>
-                                                                        ))}
-                                                                    </tbody>
-                                                                </table>
-                                                            )}
+                                            {(statsTeam === 'all' ? availableTeams : [statsTeam]).map(team => {
+                                                const catsToRender = (statsCat === 'all' ? ['U13', 'U15', 'U17'] : [statsCat]).filter(cat => {
+                                                    const source = statsType === 'cestinhas' ? allStats.playersByClubCat : allStats.snipersByClubCat;
+                                                    return source[team] && source[team][cat] && source[team][cat].length > 0;
+                                                });
+
+                                                if (catsToRender.length === 0) return null;
+
+                                                const isShooter = statsType === 'shooters';
+                                                const accentColor = isShooter ? '#38bdf8' : 'var(--golden-yellow)';
+                                                const label = isShooter ? 'Shooter' : 'Cestinha';
+
+                                                return (
+                                                    <div key={team} className="card glass-panel" style={{flex: 1, minWidth: '300px', padding: '20px', borderColor: isShooter ? 'rgba(56,189,248,0.2)' : 'var(--glass-border)'}}>
+                                                        <div style={{display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '10px'}}>
+                                                            <TeamLogo team={team} size={45} />
+                                                            <h2 style={{color: 'var(--text-main)', margin: 0, fontSize: '1.4rem'}}>{team}</h2>
                                                         </div>
-                                                    ))}
-                                                </div>
-                                            ))}
+                                                        {catsToRender.map(cat => {
+                                                            const source = isShooter ? allStats.snipersByClubCat : allStats.playersByClubCat;
+                                                            const players = source[team][cat];
+
+                                                            return (
+                                                                <div key={cat} style={{marginBottom: '20px'}}>
+                                                                    <h4 style={{color: accentColor, marginBottom: '8px', fontSize: '1.1rem'}}>Categoria {cat}</h4>
+                                                                    <table>
+                                                                        <tbody>
+                                                                            {players.map((p, idx) => (
+                                                                                <tr key={`${p.name}-${idx}`}>
+                                                                                    <td style={{fontWeight: 'bold', color: p.clubRank === 1 ? accentColor : 'var(--text-muted)', width: '30px'}}>{p.clubRank}º</td>
+                                                                                    <td style={{whiteSpace: 'normal', lineHeight: 1.2}}>
+                                                                                        <div style={{display: 'flex', flexDirection: 'column', gap: '2px'}}>
+                                                                                            <span style={{fontSize: '1.1rem', color: 'var(--text-main)'}}>{p.name} <span style={{fontSize: '0.8rem', color: 'var(--text-muted)'}}>#{p.number}</span></span>
+                                                                                            {p.clubRank === 1 && <span style={{fontSize: '0.75rem', background: isShooter ? 'rgba(56,189,248,0.2)' : 'rgba(255,199,44,0.2)', color: accentColor, padding: '2px 6px', borderRadius: '4px', width: 'fit-content'}}>{label}</span>}
+                                                                                        </div>
+                                                                                    </td>
+                                                                                    <td className="stat-cell" style={{fontSize: '1.3rem', color: accentColor}}>{p.points} {isShooter && <span style={{fontSize:'0.8rem'}}>3PT</span>}</td>
+                                                                                </tr>
+                                                                            ))}
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
-                                    </>
+                                    </div>
                                 )}
                             </>
                         )}
@@ -2011,10 +1972,10 @@
 
                         {view === 'ranking' && (
                             <div className="standings-container">
-                                <div style={{marginTop: '20px', marginBottom: '20px', borderBottom: '2px solid var(--golden-yellow)', paddingBottom: '10px'}}>
+                                <div style={{marginTop: '20px', marginBottom: '20px', borderBottom: '2px solid var(--golden-yellow)', paddingBottom: '10px', width: '100%', maxWidth: '900px'}}>
                                     <h2 style={{fontSize: '2rem'}}>Ranking Final por Categoria</h2>
                                 </div>
-                                <div className="bento-grid">
+                                <div className="bento-grid" style={{width: '100%', maxWidth: '900px'}}>
                                     {selectedCategories.length === 0 ? (
                                         <div className="empty-state glass-panel">Selecione pelo menos uma categoria acima para visualizar o ranking.</div>
                                             ) : selectedCategories.map(cat => {
@@ -2110,7 +2071,69 @@
                                                     </div>
                                                 );
                                             })}
+                                </div>
+                                
+                                {/* 1. MAIORES CESTINHAS DA COMPETIÇÃO */}
+                                {allStats.playersOverall?.length > 0 && (
+                                    <>
+                                        <h3 style={{color: 'var(--text-main)', marginBottom: '15px', marginTop: '40px', width: '100%', maxWidth: '900px', textAlign: 'center'}}>🌟 Ranking Geral: Cestinhas por Categoria</h3>
+                                        <div className="bento-grid" style={{marginBottom: '30px', width: '100%', maxWidth: '900px'}}>
+                                            {Object.keys(allStats.playersByCategory).sort().map(cat => (
+                                                <div key={cat} className="card glass-panel" style={{flex: 1, minWidth: '300px'}}>
+                                                    <h2 style={{color: 'var(--golden-yellow)'}}>🏆 Cestinhas {cat}</h2>
+                                                    <table>
+                                                        <thead><tr><th style={{width: '30px'}}>#</th><th>Atleta / Clube</th><th className="stat-cell" style={{width: '60px'}}>PTs</th></tr></thead>
+                                                        <tbody>
+                                                            {allStats.playersByCategory[cat].filter(p => p.globalRank === 1).map((p, idx) => (
+                                                                <tr key={idx}>
+                                                                    <td style={{fontWeight: 'bold', color: 'var(--golden-yellow)'}}>{p.globalRank}º</td>
+                                                                    <td className="team-name" style={{display: 'flex', alignItems: 'center', gap: '10px', whiteSpace: 'normal', lineHeight: 1.2}}><TeamLogo team={p.team} size={35} />
+                                                                        <div style={{display: 'flex', flexDirection: 'column', gap: '2px'}}>
+                                                                            <span style={{fontSize: '1.1rem'}}>{p.name} <span style={{fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'Inter', fontWeight: 'normal'}}>#{p.number}</span></span>
+                                                                            <span style={{fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'Inter', fontWeight: 'normal'}}>{p.team}</span>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td className="stat-cell text-yellow" style={{fontSize: '1.3rem'}}>{p.points}</td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            ))}
                                         </div>
+                                    </>
+                                )}
+
+                                {/* 2. MAIORES SHOOTERS DA COMPETIÇÃO */}
+                                {allStats.snipersOverall?.length > 0 && (
+                                    <>
+                                        <h3 style={{color: '#38bdf8', marginBottom: '15px', marginTop: '30px', width: '100%', maxWidth: '900px', textAlign: 'center'}}>🎯 Ranking Geral: Shooters por Categoria</h3>
+                                        <div className="bento-grid" style={{marginBottom: '30px', width: '100%', maxWidth: '900px'}}>
+                                            {Object.keys(allStats.snipersByCategory).sort().map(cat => (
+                                                <div key={cat} className="card glass-panel" style={{flex: 1, minWidth: '300px', borderColor: 'rgba(56,189,248,0.2)'}}>
+                                                    <h2 style={{color: '#38bdf8'}}>🎯 Rank Shooters {cat}</h2>
+                                                    <table>
+                                                        <thead><tr><th style={{width: '30px'}}>#</th><th>Atleta / Clube</th><th className="stat-cell" style={{width: '90px'}}>CESTAS DE 3PTS</th></tr></thead>
+                                                        <tbody>
+                                                            {allStats.snipersByCategory[cat].filter(p => p.globalRank === 1).map((p, idx) => (
+                                                                <tr key={idx}>
+                                                                    <td style={{fontWeight: 'bold', color: '#38bdf8'}}>{p.globalRank}º</td>
+                                                                    <td className="team-name" style={{display: 'flex', alignItems: 'center', gap: '10px', whiteSpace: 'normal', lineHeight: 1.2}}><TeamLogo team={p.team} size={35} />
+                                                                        <div style={{display: 'flex', flexDirection: 'column', gap: '2px'}}>
+                                                                            <span style={{fontSize: '1.1rem'}}>{p.name} <span style={{fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'Inter', fontWeight: 'normal'}}>#{p.number}</span></span>
+                                                                            <span style={{fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'Inter', fontWeight: 'normal'}}>{p.team}</span>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td className="stat-cell" style={{fontSize: '1.3rem', color: '#38bdf8', fontWeight: 'bold'}}>{p.points}</td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         )}
 
